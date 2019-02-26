@@ -19,14 +19,13 @@ export default class InlineJavaScript extends Item {
     this.description = 'Executes JavaScript code (ECMA 5.1)'
     this.workspace = new JavaScriptWorkspace(this.experiment)
     // Process the script
-    console.log(this.vars)
     this.from_string(script)
   }
 
   /** Reset all item variables to their default value. */
   reset () {
-    this.vars._prepare = ''
-    this.vars._run = ''
+    this._prepare = ''
+    this._run = ''
   }
 
   /**
@@ -60,16 +59,16 @@ export default class InlineJavaScript extends Item {
               break
             default:
               if (read_run_lines === true) {
-                this.vars._run = this.vars._run + lines[i] + '\n'
+                this._run = this._run + lines[i] + '\n'
               } else if (read_prepare_lines === true) {
-                this.vars._prepare = this.vars._prepare + lines[i] + '\n'
+                this._prepare = this._prepare + lines[i] + '\n'
               }
           }
         } else {
           if (read_run_lines === true) {
-            this.vars._run = this.vars._run + lines[i] + '\n'
+            this._run = this._run + lines[i] + '\n'
           } else if (read_prepare_lines === true) {
-            this.vars._prepare = this.vars._prepare + lines[i] + '\n'
+            this._prepare = this._prepare + lines[i] + '\n'
           }
         }
       }
@@ -78,7 +77,7 @@ export default class InlineJavaScript extends Item {
 
   /** Implements the prepare phase of an item. */
   prepare () {
-    this.workspace._eval(this.vars._prepare)
+    this.workspace._eval(this._prepare)
     super.prepare()
   }
 
@@ -86,7 +85,7 @@ export default class InlineJavaScript extends Item {
   run () {
     super.run()
     this.set_item_onset()
-    this.workspace._eval(this.vars._run)
+    this.workspace._eval(this._run)
     this._complete()
   }
 }

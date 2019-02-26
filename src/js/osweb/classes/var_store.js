@@ -1,5 +1,5 @@
 /** Class representing a variable store. */
-export default class VarStore {
+class VarStore {
   /**
    * Create a variable store object for all variables.
    * @param {Object} item - The item to which the var_store belongs.
@@ -20,32 +20,25 @@ export default class VarStore {
    * @return {Boolean|Number|String} - The value of the given variable.
    */
   get (variable, defaultValue, evaluate, valid) {
-    // Set the optional arguments
-    defaultValue = (typeof defaultValue === 'undefined') ? null : defaultValue
-    evaluate = (typeof evaluate === 'undefined') ? true : evaluate
-    valid = (typeof valid === 'undefined') ? null : valid
-
-    var value = null
-
     // Gets an experimental variable.
-    if (variable in this) {
+    if (this.has(variable)) {
       if (typeof this[variable] === 'string') {
-        value = this._item.syntax.eval_text(this[variable], null, true)
+        return this._item.syntax.eval_text(this[variable], null, true)
       } else {
-        value = this[variable]
+        return this[variable]
       }
     }
     // If value is not found locally, look in experiment object.
-    if (value == null && this._parent && variable in this._parent) {
+    if (this._parent && this._parent.has(variable)) {
       if (typeof this._parent[variable] === 'string') {
-        value = this._item.syntax.eval_text(this._parent[variable], null, true)
+        return this._item.syntax.eval_text(this._parent[variable], null, true)
       } else {
-        value = this._parent[variable]
+        return this._parent[variable]
       }
     }
 
     // Return function result.
-    return value
+    return defaultValue || null
   }
 
   /**
@@ -107,3 +100,18 @@ export default class VarStore {
    */
   vars () {}
 }
+
+const varStoreHandler = {
+  construct (Target, args) {
+    return new Proxy(new Target(...args), {
+      get (target, prop) {
+        return (['_item', '_parent'].includes(prop) ||
+          typeof target[prop] === 'function')
+          ? target[prop]
+          : target.get(prop)
+      }
+    })
+  }
+}
+
+export default new Proxy(VarStore, varStoreHandler)

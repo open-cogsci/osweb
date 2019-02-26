@@ -3,12 +3,11 @@
  * not persistent, and only exposes the vars object.
  */
 export default class JavaScriptWorkspace {
-
   /**
      * Create a JavaScript workspace.
      * @param {Object} experiment - The experiment item to which the item belongs.
      */
-  constructor(experiment) {
+  constructor (experiment) {
     this.experiment = experiment
   }
 
@@ -16,7 +15,7 @@ export default class JavaScriptWorkspace {
      * Executes JavaScript code in the workspace.
      * @param {String} js - JavaScript code to execute
      */
-  _eval(js) {
+  _eval (js) {
     let vars = this.experiment.vars
     eval(js)
   }
