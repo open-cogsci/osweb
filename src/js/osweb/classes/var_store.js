@@ -21,24 +21,25 @@ class VarStore {
    */
   get (variable, defaultValue, evaluate, valid) {
     // Gets an experimental variable.
+    let value = defaultValue || null
     if (this.has(variable)) {
       if (typeof this[variable] === 'string') {
-        return this._item.syntax.eval_text(this[variable], null, true)
+        value = this._item.syntax.eval_text(this[variable], null, true)
       } else {
-        return this[variable]
+        value = this[variable]
       }
     }
     // If value is not found locally, look in experiment object.
-    if (this._parent && this._parent.has(variable)) {
+    if (value === null && this._parent && this._parent.has(variable)) {
       if (typeof this._parent[variable] === 'string') {
-        return this._item.syntax.eval_text(this._parent[variable], null, true)
+        value = this._item.syntax.eval_text(this._parent[variable], null, true)
       } else {
-        return this._parent[variable]
+        value = this._parent[variable]
       }
     }
 
     // Return function result.
-    return defaultValue || null
+    return value
   }
 
   /**
@@ -105,10 +106,9 @@ const varStoreHandler = {
   construct (Target, args) {
     return new Proxy(new Target(...args), {
       get (target, prop) {
-        return (['_item', '_parent'].includes(prop) ||
-          typeof target[prop] === 'function')
-          ? target[prop]
-          : target.get(prop)
+        return typeof target[prop] === 'string'
+          ? target.get(prop)
+          : target[prop]
       }
     })
   }
