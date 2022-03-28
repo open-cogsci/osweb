@@ -35,7 +35,7 @@ export default class ResponseDevice {
       if (synonyms.includes(response) || synonyms.includes(response.toLowerCase()))
         return synonyms
     }
-    return null
+    return [response]
   }
 
   /** Clear all pending keyboard input. */
