@@ -33,8 +33,18 @@ export default class InlineHTML extends FormHTML {
       }
     }
     for (const input of document.getElementsByTagName('input')) {
-      if (!['checkbox', 'radio'].includes(input.type) || input.checked)
+      if (['checkbox', 'radio'].includes(input.type)) {
+        // If a checkbox or radio button is checked, set the value to the `id`
+        // attribute if an `id` attribute has been defined. This is especially
+        // important for radio-group buttons, which all share the same `name`
+        // attribute. If no `id` has been defined, fall back to the `value`
+        // attribute, which is 'on' for checked elements.
+        if (input.checked) {
+          this.experiment.vars.set(input.name, (input.id !== '' ? input.id : input.value))
+        }
+      } else {
         this.experiment.vars.set(input.name, input.value)
+      }
     }
     this.resumeOSWeb()
   }
