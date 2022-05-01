@@ -26,7 +26,7 @@ export default class InlineHTML extends FormHTML {
     for (const input of document.getElementsByTagName('input')) {
       if (!input.required)
         continue
-      if ((['checkbox', 'radio'].includes(input.type) && (!input.checked)) ||
+      if ((['checkbox', 'radio'].includes(input.type) && (!this._groupChecked(input))) ||
           (!['checkbox', 'radio'].includes(input.type) && (input.value === ''))) {
         alert('One or more required input fields are empty or have not been checked')
         return
@@ -47,6 +47,21 @@ export default class InlineHTML extends FormHTML {
       }
     }
     this.resumeOSWeb()
+  }
+  
+  /**
+   * Checks where any element from a group of input elements is checked. This
+   * allows for the required attribute to serve as expected for radio-button
+   * groups.
+   **/
+  _groupChecked (input) {
+    if (input.name === "")
+      return input.checked
+    for (input of document.getElementsByName(input.name)) {
+      if (input.checked)
+        return true
+    }
+    return false
   }
   
   run () {
