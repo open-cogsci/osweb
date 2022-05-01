@@ -1,6 +1,6 @@
 {
 	"name": "osweb",
-	"version": "1.4.7",
+	"version": "1.4.8",
 	"main": "src/js/osweb/index.js",
 	"description": "Online runtime for OpenSesame experiments",
 	"license": "GPL-3.0",
