@@ -199,7 +199,7 @@ export default class Transfer {
           img.src = currentFile.getBlobUrl()
           item.data = img
           item.type = 'image'
-        } else if (['wav', 'ogg'].includes(ext.toLowerCase())) {
+        } else if (['wav', 'ogg', 'mp3'].includes(ext.toLowerCase())) {
           const ado = new Audio()
           ado.src = currentFile.getBlobUrl()
           item.data = ado
