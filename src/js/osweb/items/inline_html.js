@@ -19,11 +19,21 @@ export default class InlineHTML extends FormHTML {
   }
   
   /**
+   * Returns an array of all form input elements, including select and textarea
+   * elements.
+   **/
+  _inputElements () {
+   return Array.from(document.getElementsByTagName('input')).concat(
+    Array.from(document.getElementsByTagName('select'))).concat(
+    Array.from(document.getElementsByTagName('textarea')))
+  }
+  
+  /**
    * Sets experimental variables based on the name properties of input elements
    * and then resumes OSWeb.
    **/
   _submitForm() {
-    for (const input of document.getElementsByTagName('input')) {
+    for (const input of this._inputElements()) {
       if (!input.required)
         continue
       if ((['checkbox', 'radio'].includes(input.type) && (!this._groupChecked(input))) ||
@@ -32,7 +42,7 @@ export default class InlineHTML extends FormHTML {
         return
       }
     }
-    for (const input of document.getElementsByTagName('input')) {
+    for (const input of this._inputElements()) {
       if (['checkbox', 'radio'].includes(input.type)) {
         // If a checkbox or radio button is checked, set the value to the `id`
         // attribute if an `id` attribute has been defined. This is especially
