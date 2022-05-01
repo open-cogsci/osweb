@@ -50,6 +50,15 @@ export default class FormHTML extends Item {
   }
   
   /**
+   * Executes script elements that are embedded in the form
+   **/
+  _runScripts () {
+    for (const script of this._customForm.getElementsByTagName('script')) {
+      this.experiment._javascriptWorkspace._eval(script.textContent)
+    }
+  }
+  
+  /**
    * Emulates the 'gray' which is applied to buttons.
    **/
   applyTheme (element, setBackground=false) {
@@ -195,5 +204,6 @@ export default class FormHTML extends Item {
     this._osweb.style.display = 'none';
     window.removeEventListener('keydown', runner._events._keyDownHandler)
     window.removeEventListener('keyup', runner._events._keyUpHandler)
+    this._runScripts()
   }
 }
