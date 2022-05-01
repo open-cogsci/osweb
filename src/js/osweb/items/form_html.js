@@ -42,11 +42,11 @@ export default class FormHTML extends Item {
    * listeners.
    **/
   resumeOSWeb () {
-      this._formContainer.remove()
-      this._osweb.style.display = 'flex'
-      window.addEventListener('keydown', runner._events._keyDownHandler)
-      window.addEventListener('keyup', runner._events._keyUpHandler)
-      this._complete()
+    this._formContainer.remove()
+    this._osweb.style.display = 'flex'
+    window.addEventListener('keydown', runner._events._keyDownHandler)
+    window.addEventListener('keyup', runner._events._keyUpHandler)
+    this._complete()
   }
   
   /**

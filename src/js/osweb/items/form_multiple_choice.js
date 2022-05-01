@@ -21,7 +21,7 @@ export default class FormMultipleChoice extends FormHTML {
   
   _boxClicked () {
     if (!this._hasOkButton)
-      this.resumeOSWeb()
+      setTimeout(this.resumeOSWeb, 100)
   }
 
   formElements () {
