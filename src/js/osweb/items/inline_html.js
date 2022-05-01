@@ -15,7 +15,7 @@ export default class InlineHTML extends FormHTML {
    * @return {string} - the HTML content
    **/
   formHTML() {
-    return this.vars.html
+    return this.vars.get("html")
   }
   
   /**
