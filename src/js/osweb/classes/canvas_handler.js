@@ -38,8 +38,8 @@ export default class CanvasHandler {
     this._canvas = new Canvas(experiment)
     this._canvas._styles = this._style
     Object.assign(this._style, styleArgs)
-    this._xc = this._canvas.width / 2
-    this._yc = this._canvas.height / 2
+    this._xc = this._canvas.width / (2 * experiment._scale_x)
+    this._yc = this._canvas.height / (2 * experiment._scale_y)
   }
   
   get color() {return this._style.color}
