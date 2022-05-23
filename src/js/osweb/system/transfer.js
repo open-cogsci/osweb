@@ -153,7 +153,7 @@ export default class Transfer {
     // this._runner._script = contents
     return contents
   }
-
+  
   /**
    * Asynchronously iterate over file pool files and generate items for them.
    *
@@ -187,29 +187,38 @@ export default class Transfer {
               return String.fromCharCode(parseInt(group1, 16))
             }
           ),
+          ext: currentFile.name.substr(currentFile.name.lastIndexOf('.') + 1).toLowerCase(),
           size: currentFile.size,
           type: 'undefined'
         }
 
-        // Determine the file type and generate the appropriate osweb item
-        const ext = currentFile.name.substr(currentFile.name.lastIndexOf('.') + 1)
-        if (['jpg', 'jpeg', 'png', 'bmp'].includes(ext.toLowerCase())) {
+        if (['jpg', 'jpeg', 'png', 'bmp'].includes(item.ext)) {
           // Create a new file pool mage item.
           const img = new Image()
           img.src = currentFile.getBlobUrl()
           item.data = img
           item.type = 'image'
-        } else if (['wav', 'ogg', 'mp3'].includes(ext.toLowerCase())) {
-          const ado = new Audio()
-          ado.src = currentFile.getBlobUrl()
-          item.data = ado
+        } else if (['wav', 'ogg', 'mp3'].includes(item.ext)) {
+          item.data = new Audio()
           item.type = 'sound'
-        } else if (['ogv', 'mp4', 'm4v'].includes(ext.toLowerCase())) {
+          // Safari gives a NotSupportedError when trying to play sound from
+          // a blob URL. As a workaround, here the blob is converted to a
+          // data URI. The data type is explicitly changed to audio, and the
+          // result is assigned to the audio source. See also:
+          // - <https://github.com/open-cogsci/osweb/issues/96>
+          let reader = new FileReader()
+          reader.onload = ((e) => {
+            item.data.src = e.target.result.replace(
+              'data:application/octet-stream', 'data:audio/' + item.ext)
+            }
+          )
+          reader.readAsDataURL(currentFile.blob)
+        } else if (['ogv', 'mp4', 'm4v'].includes(item.ext)) {
           const ado = document.createElement('VIDEO')
           ado.src = currentFile.getBlobUrl()
           item.data = ado
           item.type = 'video'
-        } else if (['csv','txt','md'].includes(ext.toLowerCase())) {
+        } else if (['csv','txt','md'].includes(item.ext)) {
           item.type = 'text'
           currentFile.blob.text().then(text => (item.data = text))
         }
