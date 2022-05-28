@@ -153,7 +153,7 @@ export default class FormHTML extends Item {
   get _paddedWidth () {
     if (typeof this._width === "undefined") {
       const [top, right, bottom, left] = this._padding
-      this._width = this.vars.get('width') - right - left
+      this._width = this.experiment._runner._renderer.view.clientWidth - right - left
     }
     return this._width
   }
@@ -165,7 +165,7 @@ export default class FormHTML extends Item {
   get _paddedHeight () {
     if (typeof this._height === "undefined") {
       const [top, right, bottom, left] = this._padding
-      this._height = this.vars.get('height') - top - bottom
+      this._height = this.experiment._runner._renderer.view.clientHeight - top - bottom
     }
     return this._height
   }
