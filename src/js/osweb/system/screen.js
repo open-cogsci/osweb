@@ -276,6 +276,18 @@ export default class Screen {
 
       // Setup the mouse click response handler.
       var clickHandler = function (event) {
+        // Briefly play each of the samples from the file pool. This is
+        // necessary in Safari so that the first happens as a direct 
+        // consequence of a user interaction.
+        for (let item of this._runner._experiment.pool._items) {
+          if (item.type === 'audio') {
+            item.data.volume = 0
+            item.data.play()
+            item.data.pause()
+            item.data.currentTime = 0
+            item.data.volume = 1
+          }
+        }
         // Remove the handler.
         this._runner._renderer.view.removeEventListener('click', clickHandler)
         this._runner._renderer.view.removeEventListener('touchstart', clickHandler)

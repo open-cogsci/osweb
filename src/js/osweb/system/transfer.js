@@ -200,7 +200,7 @@ export default class Transfer {
           item.type = 'image'
         } else if (['wav', 'ogg', 'mp3'].includes(item.ext)) {
           item.data = new Audio()
-          item.type = 'sound'
+          item.type = 'audio'
           // Safari gives a NotSupportedError when trying to play sound from
           // a blob URL. As a workaround, here the blob is converted to a
           // data URI. The data type is explicitly changed to audio, and the

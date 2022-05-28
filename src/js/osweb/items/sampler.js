@@ -51,7 +51,7 @@ export default class Sampler extends GenericResponse {
       this._sampler = new SamplerBackend(this.experiment, this._sample)
       this._sampler.volume = this.vars.get("volume")
       this._sampler.duration = this.vars.get("duration")
-      this._sampler.fade = this.vars.get("fade")
+      this._sampler.fade = this.vars.get("fade_in")
       this._sampler.pan = this.vars.get("pan")
       this._sampler.pitch = this.vars.get("pitch")
     } else {

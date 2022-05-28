@@ -14,7 +14,7 @@ export default class SamplerBackend {
   /**
    * Create a sampler object which controls the sampler device.
    * @param {Object} experiment - The experiment to which the sampler belongs.
-   * @param {String} source - The sound source name.
+   * @param {Object} source - A file pool object.
    * @param {Number} volume - The volume to use when playing the sound.
    * @param {Number} pitch - The pitch to use when playing the sound.
    * @param {Number} pan - The pan to use when playing the sound.
@@ -32,7 +32,7 @@ export default class SamplerBackend {
     this.pan = (typeof pan === 'undefined') ? 0 : pan
     this.pitch = (typeof pitch === 'undefined') ? 1 : pitch
     try {
-      this.sample = source.data.cloneNode()
+      this.sample = source.data
     } catch (e) {
       console.error('Could not play sound:', source)
       throw e
@@ -40,7 +40,10 @@ export default class SamplerBackend {
     this.sample.onended = () => this.experiment._runner._events._audioEnded(this)
 
     if (audioCtx) {
-      this.source = audioCtx.createMediaElementSource(this.sample)
+      // We can only connect a sample to an audio context once
+      if (typeof source.mediaElementSource === 'undefined')
+        source.mediaElementSource = audioCtx.createMediaElementSource(this.sample)
+      this.source = source.mediaElementSource
     } else {
       this.source = this.sample
     }
@@ -70,7 +73,8 @@ export default class SamplerBackend {
     } else {
       this.source.volume = this.volume
     }
-
+    this.sample.preservesPitch = false
+    this.sample.playbackRate = this.pitch
     this.sample.play()
   }
 
@@ -82,45 +86,35 @@ export default class SamplerBackend {
 
   applyFilters () {
     const nodes = [audioCtx.destination]
-
-    try {
-      const gainNode = audioCtx.createGain()
-      gainNode.gain.setValueAtTime(this.volume, audioCtx.currentTime)
-
-      if (this.fade) {
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime)
-        gainNode.gain.linearRampToValueAtTime(this.volume, audioCtx.currentTime + this.fade / 1000)
-      }
-
-      nodes.unshift(gainNode)
-    } catch (e) {
-      console.warn('Unable to apply volume or gain', e)
+    // Set volume
+    const gainNode = new GainNode(audioCtx)
+    gainNode.gain.setValueAtTime(this.volume, audioCtx.currentTime)
+    if (this.fade) {
+      gainNode.gain.setValueAtTime(0, audioCtx.currentTime)
+      gainNode.gain.linearRampToValueAtTime(this.volume, audioCtx.currentTime + this.fade / 1000)
     }
-
+    nodes.unshift(gainNode)
+    // Set panning
     if (this.pan) {
+      let pan
+      if (this.pan === 'left')
+        pan = -1
+      else if (this.pan === 'right')
+        pan = 1
+      else
+        pan = this.pan
       try {
-        nodes.unshift(new StereoPannerNode(audioCtx, { pan: this.pan }))
+        nodes.unshift(new StereoPannerNode(audioCtx, { pan: pan }))
       } catch (e) {
         console.warn('Unable to apply panning', e)
       }
     }
-
     // Connect the filters creating a chain
     for (let i = 0; i < nodes.length; i++) {
       if (nodes[i] !== audioCtx.destination) {
         nodes[i].connect(nodes[i + 1])
       }
     }
-
     return nodes.shift(0)
-  }
-  
-  onEnded () {
-  /**
-   * Clears the source tag of the sample to free up the WebMediaPlayer. See
-   * also: https://github.com/open-cogsci/osweb/issues/69
-   **/
-    this.source.disconnect()
-    this.sample.src = ""
   }
 }
