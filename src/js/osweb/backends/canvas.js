@@ -618,7 +618,7 @@ export default class Canvas {
     const texture = Texture.from(canvas)
     this._textures.push(texture)
     const sprite = new Sprite(texture)
-    sprite.anchor.set(.5)
+    // sprite.anchor.set(.5)
     if (typeof scale !== 'undefined') {
       sprite.scale.x = scale
       sprite.scale.y = scale
@@ -627,12 +627,13 @@ export default class Canvas {
       sprite.angle = rotation
     // Position the image
     if ([1, '1', true, 'yes'].indexOf(center) !== -1) {
+      sprite.x = Math.floor(x - (sprite.width / 2))
+      sprite.y = Math.floor(y - (sprite.height / 2))
+    } else {
       sprite.x = x
       sprite.y = y
-    } else {
-      sprite.x = x + (sprite.width / 2)
-      sprite.y = y + (sprite.height / 2)
     }
+    console.log(sprite.x)
     this._container.addChild(sprite)
   }
 
@@ -950,8 +951,8 @@ export default class Canvas {
 
           // Check for horizontal centering.
           if ([1, '1', true, 'yes'].indexOf(center) !== -1) {
-            textBlock.rows[i].text_elements[j].x = textBlock.rows[i].text_elements[j].x + x - (textBlock.rows[i].width / 2)
-            textBlock.rows[i].text_elements[j].y = textBlock.rows[i].text_elements[j].y + y - (textBlock.height / 2)
+            textBlock.rows[i].text_elements[j].x = textBlock.rows[i].text_elements[j].x + x - Math.floor(textBlock.rows[i].width / 2)
+            textBlock.rows[i].text_elements[j].y = textBlock.rows[i].text_elements[j].y + y - Math.floor(textBlock.height / 2)
           } else {
             textBlock.rows[i].text_elements[j].x = textBlock.rows[i].text_elements[j].x + x
             textBlock.rows[i].text_elements[j].y = textBlock.rows[i].text_elements[j].y + y + 6
@@ -982,12 +983,13 @@ export default class Canvas {
       var textElement = new Text(txt, textStyle)
       this._textures.push(textElement)
       if ([1, '1', true, 'yes'].indexOf(center) !== -1) {
-        textElement.x = x - (textElement.width / 2)
-        textElement.y = y - (textElement.height / 2)
+        textElement.x = Math.floor(x - (textElement.width / 2))
+        textElement.y = Math.floor(y - (textElement.height / 2))
       } else {
         textElement.x = x
         textElement.y = y
       }
+      console.log(textElement.x)
 
       //  Add text element to the stage.
       this._container.addChild(textElement)
