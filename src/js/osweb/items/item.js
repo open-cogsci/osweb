@@ -143,13 +143,25 @@ export default class Item {
     this.comments = []
     this.reset()
 
-    // Split the string into an array of lines.
+    // Split the string into an array of lines. We keep track of whether we're
+    // inside a multiline variable definition, because those contain lines that
+    // are not syntactically valid.
     if (script !== null) {
       this.parse_multiline_vars(script)
-      var lines = script.split('\n')
-      for (var i = 0; i < lines.length; i++) {
-        if ((lines[i] !== '') && (this.parse_variable(lines[i]) === false)) {
-          this.parse_line(lines[i])
+      const lines = script.split('\n')
+      const pattern = /__(\w+)__/gms
+      let in_multi = false
+      for (let line of lines) {
+        if (in_multi) {
+          if (line === '__end__') in_multi = false
+          continue
+        }
+        if (pattern.exec(line)) {
+          in_multi = true
+          continue
+        }
+        if ((line !== '') && (this.parse_variable(line) === false)) {
+          this.parse_line(line)
         }
       }
     }
