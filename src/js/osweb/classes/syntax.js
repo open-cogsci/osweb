@@ -18,65 +18,6 @@ export default class Syntax {
   }
 
   /**
-   * Compile a os condition for further processing.
-   * @param {String} cnd - The condition to compile.
-   * @param {Boolean} bytecode - The condition is converted to a python AST tree.
-   * @return {String} - The compiled condition.
-   */
-  compile_cond (cnd, bytecode) {
-    // Check for conditional paramters.
-    bytecode = (typeof bytecode === 'undefined') ? true : bytecode
-
-    if (cnd.toLowerCase() === 'always') {
-      return true
-    } else if (cnd.toLowerCase() === 'never') {
-      return false
-    } else {
-      if (cnd[0] === '=') {
-        cnd = cnd.substr(1)
-      } else {
-        cnd = this.remove_quotes(cnd)
-        // Scan for literals (strings, ßnumbers, etc).
-        cnd = cnd.replace(/(?!(?:and|or|not)\b)(?:".*?"|'.*?'|\[(?:\w+?|=.+)\]|\b\w+\b)/g, (match, offset, string) => {
-          if (string[offset] === '[' && string[offset + match.length - 1] === ']') {
-            // Check if match is a variable.
-            if (string[offset - 1] === '\\' && string[offset - 2] !== '\\') {
-              // Check if the current match is escaped, and simpl\w+?|=.+y return it untouched if so.
-              return `"${match}"`
-            }
-            // Check if the variable contains a Python expression
-            if (match[1] === '=') {
-              const expression = match.substring(2, match.length - 1)
-              const ast = this._runner._pythonParser._parse(expression)
-              return this._runner._pythonParser._run_statement(ast)
-            }
-
-            // Return the var. notation otherwise
-            const content = match.substring(1, match.length - 1)
-            return `var.${content}`
-          } else if (['"', '\''].includes(string[offset]) &&
-            string[offset] === string[offset + match.length - 1]) {
-            // Check if match is between quotes. Don't do anything then
-            return match
-          } else if (!Number.isNaN(Number(match))) {
-            return Number(match)
-          } else {
-            return `"${match}"`
-          }
-        })
-
-        // Handle operators.
-        cnd = cnd.replace(/([^!<>=\-+*])(=)([^=])/g, '$1==$3')
-      }
-    }
-    if (bytecode === true) {
-      return this._runner._pythonParser._parse(cnd)
-    } else {
-      return cnd
-    }
-  }
-
-  /**
    * Converts a string to a float or integer if possible.
    * @param {String|Number} value -The variable to convert to a number.
    * @return {String|Number} - An number or float if variable could be converted, original value otherwise.
@@ -120,6 +61,10 @@ export default class Syntax {
     if (isNumber(text)) return text
     // Try to convert text to a number. If this succeeds return it.
     if ((text !== '') && !isNaN(toNumber(text))) return toNumber(text)
+    // Check if the text contains template literals. If so, we evaluate these.
+    // This is the preferred syntax.
+    if (text.includes('${'))
+      return this._runner._experiment._javascriptWorkspace._eval(`\`${text}\``)
     text = this.escapeBrackets(text)
     // First, parse the regular variables. These should be parsed recursively
     // to allow for [[nested]variables].

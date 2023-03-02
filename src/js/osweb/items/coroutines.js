@@ -53,7 +53,7 @@ export default class Coroutines extends Item {
         throw new Error(msg)
       }
       this._runner._pythonWorkspace.self = this
-      const cond = this._runner._syntax.compile_cond(taskParams.run_if)
+      const cond = taskParams.run_if
       if (this._runner._pythonWorkspace._eval(cond) === true) {
         const start_time = this._runner._syntax.eval_text(taskParams.start_time, this.vars)
         const end_time = this._runner._syntax.eval_text(taskParams.end_time, this.vars)

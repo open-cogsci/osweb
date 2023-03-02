@@ -78,6 +78,6 @@ export default class JavaScriptWorkspace {
     const zipLongest = pyZipLongest
     const enumerate = pyEnumerate
     const items = pyItems
-    eval(js)
+    return eval(js)
   }
 }

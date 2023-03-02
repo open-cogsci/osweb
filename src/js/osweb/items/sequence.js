@@ -48,7 +48,7 @@ export default class Sequence extends Item {
         // Add the item to the internal list.
         this._items.push({
           item: this.items[this._index - 1].item,
-          cond: this.syntax.compile_cond(this.items[this._index - 1].cond)
+          cond: this.items[this._index - 1].cond
         })
 
         // Prepare the item.
@@ -136,7 +136,7 @@ export default class Sequence extends Item {
   run () {
     // Inherited.
     super.run()
-
+    debugger
     // Check if all items have been processed.
     if (this._index < this._items.length) {
       // Flush the keyboard at the beginning of the sequence.
@@ -149,10 +149,10 @@ export default class Sequence extends Item {
       const currentItem = this._items[this._index - 1]
 
       // Set the workspace.
-      this._runner._pythonWorkspace.self = this
+      this._runner._experiment._javascriptWorkspace.self = this
 
       // Check if the item may run.
-      if (this._runner._pythonWorkspace._eval(currentItem.cond) === true) {
+      if (this._runner._experiment._javascriptWorkspace._eval(currentItem.cond)) {
         // run the current item of the sequence object.
         this._runner._itemStore.run(currentItem.item, this)
       } else {

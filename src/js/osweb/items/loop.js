@@ -303,10 +303,10 @@ export default class Loop extends Item {
     const break_if_val = this.vars.get('break_if', undefined, false)
     this._break_if = ['never', ''].includes(break_if_val)
       ? null
-      : this.syntax.compile_cond(break_if_val)
+      : break_if_val
     if (this._break_if !== null) {
       this.python_workspace['this'] = this
-      if (this.python_workspace._eval(this._break_if) === true) {
+      if (this.experiment._javascriptWorkspace._eval(this._break_if)) {
         this._complete()
         this._initialized = false
         return

@@ -42,10 +42,10 @@ export default class RepeatCycle extends Item {
     // Inherited.
     super.run()
     // Prepare the condtion for which the repeat_cycle must fire.
-    const condition = this.syntax.compile_cond(this.vars.get('condition', undefined, false))
+    const condition = this.vars.get('condition', undefined, false)
     // Run item only one time.
     if (this._status !== constants.STATUS_FINALIZE) {
-      if (this.experiment._runner._pythonWorkspace._eval(condition) === true) {
+      if (this.experiment._runner._javascriptWorkspace._eval(condition)) {
         this.experiment.vars.repeat_cycle = 1
       }
 
