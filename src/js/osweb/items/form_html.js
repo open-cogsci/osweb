@@ -54,7 +54,7 @@ export default class FormHTML extends Item {
    **/
   _runScripts () {
     for (const script of this._customForm.getElementsByTagName('script')) {
-      this.experiment._javascriptWorkspace._eval(script.textContent)
+      this.experiment._javascriptWorkspace.exec(script.textContent)
     }
   }
   

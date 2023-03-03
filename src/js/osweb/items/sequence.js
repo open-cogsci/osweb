@@ -136,7 +136,6 @@ export default class Sequence extends Item {
   run () {
     // Inherited.
     super.run()
-    debugger
     // Check if all items have been processed.
     if (this._index < this._items.length) {
       // Flush the keyboard at the beginning of the sequence.

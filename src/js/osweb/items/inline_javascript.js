@@ -76,7 +76,7 @@ export default class InlineJavaScript extends Item {
 
   /** Implements the prepare phase of an item. */
   prepare () {
-    this.workspace._eval(this.vars._prepare)
+    this.workspace.exec(this.vars._prepare)
     super.prepare()
   }
 
@@ -84,7 +84,7 @@ export default class InlineJavaScript extends Item {
   run () {
     super.run()
     this.set_item_onset()
-    this.workspace._eval(this.vars._run)
+    this.workspace.exec(this.vars._run)
     this._complete()
   }
 }
