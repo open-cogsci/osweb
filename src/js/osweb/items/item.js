@@ -1,5 +1,6 @@
 import { constants } from '../system/constants.js'
 import VarStore from '../classes/var_store.js'
+import WorkspaceVarStore from '../classes/workspace_var_store.js'
 import Clock from '../backends/clock.js'
 
 /** Class representing an OpenSesame item. */
@@ -18,7 +19,12 @@ export default class Item {
     this.python_workspace = this._runner._pythonWorkspace
     this.response_store = this._runner._responseStore
     this.syntax = this._runner._syntax
-    this.vars = new VarStore(this, (experiment.constructor.name === 'Runner') ? null : this.experiment.vars)
+    // The experiment object has a special VarStore that maps onto the 
+    // JavaScript worskpace.
+    if (experiment.constructor.name === 'Runner')
+      this.vars = new WorkspaceVarStore(this)
+    else
+      this.vars = new VarStore(this, this.experiment.vars)
   }
 
   /** Implements the complete phase of an item. */

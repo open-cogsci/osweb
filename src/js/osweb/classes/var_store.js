@@ -5,10 +5,11 @@ export default class VarStore {
    * @param {Object} item - The item to which the var_store belongs.
    * @param {Object} parent - The parent global var_store.
    */
-  constructor (item, parent) {
+  constructor (item, parent = null) {
     // Create and set private properties.
     this._item = item
     this._parent = parent
+    this._scope = this
     this._ignored_properties = [
       '_item', '_parent', '_bypass_proxy', '_ignored_properties'
     ]
@@ -23,29 +24,25 @@ export default class VarStore {
    * @param {Boolean} addQuotes - The add quotes toggle.
    * @return {Boolean|Number|String} - The value of the given variable.
    */
-  get (variable, defaultValue, evaluate, valid, addQuotes) {
-    // Set the optional arguments
-    defaultValue = (typeof defaultValue === 'undefined') ? null : defaultValue
-    evaluate = (typeof evaluate === 'undefined') ? true : evaluate
-    valid = (typeof valid === 'undefined') ? null : valid
+  get (variable, defaultValue = null, evaluate = true, valid = null, addQuotes = false) {
     var value = null
     // Gets an experimental variable.
-    if (variable in this) {
+    if (variable in this._scope) {
       this._bypass_proxy = true // Avoid Proxy feedback loop
       if (typeof this[variable] === 'string' && evaluate === true) {
-        value = this._item.syntax.eval_text(this[variable], null, addQuotes)
+        value = this._item.syntax.eval_text(this._scope[variable], null, addQuotes)
       } else {
-        value = this[variable]
+        value = this._scope[variable]
       }
       this._bypass_proxy = false
     }
     // If value is not found locally, look in experiment object.
-    if (value == null && this._parent && variable in this._parent) {
+    if (value == null && this._parent && variable in this._parent._scope) {
       this._parent._bypass_proxy = true // Avoid Proxy feedback loop
-      if (typeof this._parent[variable] === 'string' && evaluate === true) {
-        value = this._item.syntax.eval_text(this._parent[variable], null, addQuotes)
+      if (typeof this._parent._scope[variable] === 'string' && evaluate === true) {
+        value = this._item.syntax.eval_text(this._parent._scope[variable], null, addQuotes)
       } else {
-        value = this._parent[variable]
+        value = this._parent._scope[variable]
       }
       this._parent._bypass_proxy = false
     }
@@ -67,7 +64,7 @@ export default class VarStore {
    */
   inspect () {
     const variables = []
-    for (const variable in this) {
+    for (const variable in this._scope) {
       if (this._ignored_properties.includes(variable)) continue
       variables.push(variable)
     }
@@ -80,7 +77,7 @@ export default class VarStore {
   items () {
     const pairs = {}
     for (const variable of this.inspect()) {
-      pairs[variable] = this[variable]
+      pairs[variable] = this._scope[variable]
     }
     return pairs
   }
@@ -91,7 +88,7 @@ export default class VarStore {
    * @value {Boolean|Number|String} - Value of the variable to set.
    */
   set (variable, value) {
-    this[variable] = value
+    this._scope[variable] = value
   }
 
   /**
@@ -100,7 +97,7 @@ export default class VarStore {
    */
   unset (variable) {
     if (this.has(variable) === true) {
-      delete this[variable]
+      delete this._scope[variable]
     }
   }
 
@@ -116,8 +113,7 @@ export default class VarStore {
    * preserved.
    * @param {Array} preserve - An array of variable names to preserve.
    */
-  clear (preserve) {
-    preserve = (typeof preserve === 'undefined') ? [] : preserve
+  clear (preserve = []) {
     for (const variable of this.inspect()) {
       if (preserve.includes(variable)) continue
       this.unset(variable)

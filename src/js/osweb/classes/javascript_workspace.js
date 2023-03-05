@@ -39,53 +39,42 @@ export default class JavaScriptWorkspace {
     this.experiment = experiment
     this._script_container = document.createElement('script')
     this._script_element = null
+    this._initialized = false
     document.body.appendChild(this._script_container)
   }
   
+  /**
+   * Initiales the workspace by making a number of functions, objects, and
+   * classes available. The window object serves as the scope for the 
+   * workspace.
+   */
   _init() {
-    this._script_element = document.createElement('script')
-    document.__JavaScriptWorkspaceAPI = JavaScriptWorkspaceAPI
-    document.__vars = new Proxy(this.experiment.vars, new VarStoreHandler())
-    document.__range = range
-    document.__enumerate = enumerate
-    document.__items = items
-    document.__zip = zip
-    document.__zipLongest = zipLongest
-    document.__random = random
-    document.__convert = convert
-    document.__csvParse = csvParse
-    document.__CanvasHandler = CanvasHandler
-    this._script_element.innerHTML = `
-const Canvas = (styleArgs = {}) => new document.__CanvasHandler(
-    runner._experiment, styleArgs)
-const exp = runner._experiment
-const pool = runner._pool
-const vars = document.__vars
-const persistent = {}
-// Expose common functions. Binding is necessary to provide the correct scope
-// for the functions. The JavaScriptWorkspaceAPI class is exposed as a property
-// of the document object because imports are not allowed in this context.
-const api = new document.__JavaScriptWorkspaceAPI(exp)
-const reset_feedback = api.reset_feedback.bind(api)
-const set_subject_nr = api.set_subject_nr.bind(api)
-const sometimes = api.sometimes.bind(api)
-const xy_from_polar = api.xy_from_polar.bind(api)
-const xy_to_polar = api.xy_to_polar.bind(api)
-const xy_distance = api.xy_distance.bind(api)
-const xy_circle = api.xy_circle.bind(api)
-const xy_grid = api.xy_grid.bind(api)
-const xy_random = api.xy_random.bind(api)
-// Expose other common functions that are exposed through the documens object
-const range = document.__range
-const enumerate = document.__enumerate
-const items = document.__items
-const zip = document.__zip
-const zipLongest = document.__zipLongest
-const random = document.__random
-const convert = document.__convert
-const csvParse = document.__csvParse
-`
-    this._script_container.appendChild(this._script_element)
+    this._initialized = true
+    window.vars = new Proxy(this.experiment.vars, new VarStoreHandler())
+    window.range = range
+    window.enumerate = enumerate
+    window.items = items
+    window.zip = zip
+    window.zipLongest = zipLongest
+    window.random = random
+    window.convert = convert
+    window.csvParse = csvParse
+    window.Canvas = (styleArgs = {}) => 
+                     new CanvasHandler(runner._experiment, styleArgs)
+    window.exp = runner._experiment
+    window.pool = runner._pool
+    window.persistent = {}
+    const api = new JavaScriptWorkspaceAPI(runner._experiment)
+    window.reset_feedback = api.reset_feedback.bind(api)
+    window.set_subject_nr = api.set_subject_nr.bind(api)
+    window.sometimes = api.sometimes.bind(api)
+    window.xy_from_polar = api.xy_from_polar.bind(api)
+    window.xy_to_polar = api.xy_to_polar.bind(api)
+    window.xy_distance = api.xy_distance.bind(api)
+    window.xy_circle = api.xy_circle.bind(api)
+    window.xy_grid = api.xy_grid.bind(api)
+    window.xy_random = api.xy_random.bind(api)
+    window._workspace = this
   }
 
   /**
@@ -95,13 +84,14 @@ const csvParse = document.__csvParse
    * @returns {Object} - Return value
    */
   _eval(js) {
-    if (this._script_element === null) {
+    if (!this._initialized) {
       this._init()
       return this._eval(js)
     }
-    this._script_container.removeChild(this._script_element)
+    if (this._script_element !== null)
+      this._script_container.removeChild(this._script_element)
     this._script_element = document.createElement('script')
-    this._script_element.innerHTML = `runner._experiment._javascriptWorkspace._result = ${js}`
+    this._script_element.innerHTML = `_workspace._result = ${js}`
     this._script_container.appendChild(this._script_element)
     return this._result
   }
@@ -113,44 +103,14 @@ const csvParse = document.__csvParse
    * @param {String} js - JavaScript code to execute
    */
   exec(js) {
-    if (this._script_element === null) {
+    if (!this._initialized) {
       this._init()
       return this.exec(js)
     }
-    this._script_container.removeChild(this._script_element)
+    if (this._script_element !== null)
+      this._script_container.removeChild(this._script_element)
     this._script_element = document.createElement('script')
     this._script_element.innerHTML = js
     this._script_container.appendChild(this._script_element)
   }
-  
-  // _eval (js) {
-  //   // OSWeb objects
-  //   const vars = this.vars_proxy
-  //   const Canvas = (styleArgs = {}) => new CanvasHandler(
-  //       this.experiment, styleArgs)
-  //   const pool = this.experiment.pool
-  //   const persistent = this._persistent
-  //   // Expose common functions. Binding is necessary to provide the correct
-  //   // scope for the functions.
-  //   const reset_feedback = this.api.reset_feedback.bind(this.api)
-  //   const set_subject_nr = this.api.set_subject_nr.bind(this.api)
-  //   const sometimes = this.api.sometimes.bind(this.api)
-  //   const xy_from_polar = this.api.xy_from_polar.bind(this.api)
-  //   const xy_to_polar = this.api.xy_to_polar.bind(this.api)
-  //   const xy_distance = this.api.xy_distance.bind(this.api)
-  //   const xy_circle = this.api.xy_circle.bind(this.api)
-  //   const xy_grid = this.api.xy_grid.bind(this.api)
-  //   const xy_random = this.api.xy_random.bind(this.api)
-  //   // Expose useful libraries
-  //   const random = randomExt
-  //   const convert = colorConvert
-  //   const csvParse = parse
-  //   // Expose the pythonic functions
-  //   const range = pyRange
-  //   const zip = pyZip
-  //   const zipLongest = pyZipLongest
-  //   const enumerate = pyEnumerate
-  //   const items = pyItems
-  //   return eval(js)
-  // }
 }
