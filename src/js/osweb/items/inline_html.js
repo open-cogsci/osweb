@@ -15,7 +15,25 @@ export default class InlineHTML extends FormHTML {
    * @return {string} - the HTML content
    **/
   formHTML() {
-    return this.vars.get("html")
+    // The goal is to evaluate only the non-script parts of the HTML. To
+    // accomplish this, we first get all script blocks and determine the
+    // to-be-evaluated parts based on whatever is in-between. Finally, we
+    // reverse the indices and evaluate the to-be-evaluated HTML parts from the
+    // end to the beginning.
+    let html = this.vars.get('html', null, false)
+    let start_pos = 0
+    const to_eval = []
+    for (const match of html.matchAll(/<script>.*?<\/script>/isg)) {
+      to_eval.push([start_pos, match.index])
+      start_pos = match.index + match[0].length
+    }
+    to_eval.reverse()
+    for (let [start, end] of to_eval) {
+      html = html.slice(0, start) + 
+        this.syntax.eval_text(html.slice(start, end)) +
+        html.slice(end)
+    }
+    return html
   }
   
   /**
