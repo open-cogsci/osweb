@@ -27,6 +27,7 @@ export default class Logger extends Item {
   /** Reset all item variables to their default value. */
   reset () {
     this.logvars = []
+    this.exclude_patterns = []
     this.vars.auto_log = 'yes'
   }
 
@@ -36,13 +37,24 @@ export default class Logger extends Item {
      */
   from_string (script) {
     this.reset()
+    let key
+    let val
     if (script !== null) {
       var lines = script.split('\n')
       for (var i = 0; i < lines.length; i++) {
         if ((lines[i] !== '') && (this.parse_variable(lines[i]) === false)) {
           var tokens = this.syntax.split(lines[i])
-          if ((tokens[0] === 'log') && (tokens.length > 0)) {
-            this.logvars.push(tokens[1])
+          if (tokens.length > 1) {
+            key = tokens[0]
+            val = this.syntax.remove_quotes(tokens[1])
+            if (key === 'log') {
+              this.logvars.push(val)
+            } else if (key === 'exclude') {
+              // Convert the unix-style filename pattern matching to regular
+              // expressions.
+              this.exclude_patterns.push(new RegExp(
+                val.replaceAll('\*', '.*').replaceAll('\?', '.')))
+            }
           }
         }
       }
@@ -56,11 +68,13 @@ export default class Logger extends Item {
     if (this._status !== constants.STATUS_FINALIZE) {
       this._status = constants.STATUS_FINALIZE
       this.set_item_onset()
-      this.experiment._log.write_vars(
-        (this.vars.get('auto_log') === 'yes')
-          ? this.logvars.concat(this.experiment.vars.inspect()).sort()
-          : this.logvars
-      )
+      let logvars = this.logvars
+      if (this.vars.get('auto_log') === 'yes')
+        logvars = logvars.concat(this.experiment.vars.inspect())
+      for (const exclude_pattern of this.exclude_patterns)
+        logvars = logvars.filter(
+          (key) => { return !key.match(exclude_pattern) })
+      this.experiment._log.write_vars(logvars.sort())
       this._complete()
     }
   }

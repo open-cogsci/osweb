@@ -10,6 +10,7 @@ export default class VarStore {
     this._item = item
     this._parent = parent
     this._scope = this
+    this._registered = []
     this._ignored_properties = [
       '_item', '_parent', '_bypass_proxy', '_ignored_properties'
     ]
@@ -65,7 +66,18 @@ export default class VarStore {
   inspect () {
     const variables = []
     for (const variable in this._scope) {
-      if (this._ignored_properties.includes(variable)) continue
+      // If a variable hasn't been explicitly registered using vars.set, then
+      // it is only returned under particular conditions.
+      if (!this._registered.includes(variable)) {
+        if (this._ignored_properties.includes(variable))
+          continue
+        // Don't return hidden variables prefixed with _
+        if (variable.startsWith('_'))
+          continue
+        // Only return variables of standard types to keep the log file clean
+        if (!['number', 'string', 'boolean'].includes(typeof this._scope[variable]))
+          continue
+      }
       variables.push(variable)
     }
     return variables
@@ -88,6 +100,8 @@ export default class VarStore {
    * @value {Boolean|Number|String} - Value of the variable to set.
    */
   set (variable, value) {
+    if (!this._registered.includes(variable))
+      this._registered.push(variable)
     this._scope[variable] = value
   }
 

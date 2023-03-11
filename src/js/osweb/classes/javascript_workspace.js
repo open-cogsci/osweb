@@ -23,6 +23,10 @@ class VarStoreHandler {
       ? target.get(prop, null, true, null, false)
       : target[prop]
   }
+  set (target, key, value) {
+    // Use the set method to make sure that variables are registered.
+    target.set(key, value)
+  }
 }
 
 
