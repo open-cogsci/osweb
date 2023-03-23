@@ -13,7 +13,6 @@ export default class BaseElement {
     this.defaults.show_if = 'always'
     this.defaults.z_index = 0
     this.experiment = sketchpad.experiment
-    this.fix_coordinates = (sketchpad.vars.uniform_coordinates === 'yes')
     this.name = sketchpad.name
     this.only_keywords = false
     this.pool = sketchpad.experiment.pool
@@ -56,8 +55,8 @@ export default class BaseElement {
    */
   eval_properties () {
     // Evaluates all properties and return them.
-    const xc = this.experiment.vars.width / 2
-    const yc = this.experiment.vars.height / 2
+    const xc = this.experiment.vars.get('width') / 2
+    const yc = this.experiment.vars.get('height') / 2
 
     this._properties = Object.entries(this.properties).reduce((result, [prop, val]) => {
       let value = this.syntax.eval_text(val, this.vars, false)

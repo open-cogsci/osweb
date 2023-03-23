@@ -57,15 +57,17 @@ export default class MediaPlayer extends Item {
 
   /** Implements the prepare phase of an item. */
   prepare () {
+    const event_handler = this.vars.get('event_handler')
+    const event_handler_trigger = this.vars.get('event_handler_trigger')
+    const duration = this.vars.get('duration')
     // Opens the video file for playback.
     this._video = this.experiment.pool[this.vars.get('video_src')]
     this._video_player = new Video(this.experiment, this._video)
 
     // Set the inline code options.
-    if (this.vars.event_handler !== '') {
-      this._video_player._script = this._runner._pythonParser._parse(this.vars.event_handler)
-    }
-    this._video_player._event_handler_always = (this.vars.event_handler_trigger === 'after every frame')
+    if (event_handler !== '')
+      this._video_player._script = this._runner._pythonParser._parse(event_handler)
+    this._video_player._event_handler_always = (event_handler_trigger === 'after every frame')
 
     // Set the audio option.
     this._video_player.audio = (this.vars.get('playaudio') === 'yes')
@@ -74,10 +76,10 @@ export default class MediaPlayer extends Item {
     this._video_player.full_screen = (this.vars.get('resizeVideo') === 'yes')
 
     // Adjust the duration parameter from sound to video if defined.
-    if (this.vars.duration === 'sound') {
-      this.vars.duration = 'video'
-    }
-    this._video_player.duration = this.vars.duration
+    if (duration === 'sound')
+      this._video_player.duration = 'video'
+    else
+      this._video_player.duration = duration
 
     // Inherited.
     super.prepare()

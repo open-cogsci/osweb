@@ -28,7 +28,7 @@ export default class Coroutines extends Item {
       const [cmd, arglist, kwdict] = this.experiment.syntax.parse_cmd(s)
       if (cmd === 'set') {
         const [variable, value] = arglist
-        this.vars[variable] = value
+        this.vars.set(variable, value)
       }
       if (cmd === 'run' && arglist.length) {
         const task = {

@@ -30,7 +30,7 @@ export default class VarStore {
     // Gets an experimental variable.
     if (variable in this._scope) {
       this._bypass_proxy = true // Avoid Proxy feedback loop
-      if (typeof this[variable] === 'string' && evaluate === true) {
+      if (typeof this._scope[variable] === 'string' && evaluate === true) {
         value = this._item.syntax.eval_text(this._scope[variable], null, addQuotes)
       } else {
         value = this._scope[variable]

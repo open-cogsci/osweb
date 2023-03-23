@@ -75,9 +75,9 @@ export default class Syntax {
         let value
         try {
           if ((typeof vars === 'undefined') || (vars === null) || (typeof vars[content] === 'undefined')) {
-            value = this._runner._experiment.vars[content]
+            value = this._runner._experiment.vars.get(content, null, false)
           } else {
-            value = vars[content]
+            value = vars.get(content, null, false)
           }
           // Value could still be an expression, so evaluate again
           if (typeof value === 'undefined') {

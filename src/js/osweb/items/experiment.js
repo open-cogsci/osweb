@@ -34,47 +34,34 @@ export default class Experiment extends Item {
     this.pool = this._runner._pool
 
     // Set default variables
-    this.vars.start = 'experiment'
-    this.vars.title = 'My Experiment'
-    this.vars.bidi = 'no'
-    this.vars.round_decimals = 2
-    this.vars.form_clicks = 'no'
-    this.vars.uniform_coordinates = 'no'
-    this.vars.sessionid = new Date().valueOf() + Math.floor(Math.random() * 100000)
-
-    // Sound parameters.
-    this.vars.sound_freq = 48000
-    this.vars.sound_sample_size = -16
-    this.vars.sound_channels = 2
-    this.vars.sound_buf_size = 1024
-
-    // Default backend
-    this.vars.canvas_backend = 'xpyriment'
-
+    this.vars.set('start', 'experiment')
+    this.vars.set('round_decimals', 2)
+    this.vars.set('form_clicks', 'no')
+    this.vars.set('sessionid', new Date().valueOf() + Math.floor(Math.random() * 100000))
     // Display parameters.
-    this.vars.width = 1024
-    this.vars.height = 768
-    this.vars.background = 0x000000
-    this.vars.foreground = 0xFFFFFF
-    this.vars.penwidth = 1
+    this.vars.set('width', 1024)
+    this.vars.set('height', 768)
+    this.vars.set('background', 0x000000)
+    this.vars.set('foreground', 0xFFFFFF)
+    this.vars.set('penwidth', 1)
 
     // Font parameters.
-    this.vars.font_size = 18
-    this.vars.font_family = 'mono'
-    this.vars.font_italic = 'no'
-    this.vars.font_bold = 'no'
-    this.vars.font_underline = 'no'
+    this.vars.set('font_size', 18)
+    this.vars.set('font_family', 'mono')
+    this.vars.set('font_italic', 'no')
+    this.vars.set('font_bold', 'no')
+    this.vars.set('font_underline', 'no')
   }
 
   /** Resets the feedback variables (acc, avg_rt, etc.). */
   reset_feedback () {
-    this.vars.total_responses = 0
-    this.vars.total_correct = 0
-    this.vars.total_response_time = 0
-    this.vars.avg_rt = 'undefined'
-    this.vars.average_response_time = 'undefined'
-    this.vars.accuracy = 'undefined'
-    this.vars.acc = 'undefined'
+    this.vars.set('total_responses', 0)
+    this.vars.set('total_correct', 0)
+    this.vars.set('total_response_time', 0)
+    this.vars.set('avg_rt', 'undefined')
+    this.vars.set('average_response_time', 'undefined')
+    this.vars.set('accuracy', 'undefined')
+    this.vars.set('acc', 'undefined')
   }
 
   /**
@@ -83,11 +70,11 @@ export default class Experiment extends Item {
     */
   set_subject (pNr) {
     // Sets the subject number and parity (even/ odd).
-    this.vars.subject_nr = pNr
+    this.vars.set('subject_nr = pNr
     if ((pNr % 2) === 0) {
-      this.vars.subject_parity = 'even'
+      this.vars.set('subject_parity', 'even')
     } else {
-      this.vars.subject_parity = 'odd'
+      this.vars.set('subject_parity', 'odd')
     }
   }
 
@@ -183,9 +170,9 @@ export default class Experiment extends Item {
       this._status = constants.STATUS_FINALIZE
 
       // Save the date and time, and the version of OpenSesame
-      this.vars.datetime = new Date().toString()
-      this.vars.opensesame_version = VERSION_NUMBER
-      this.vars.opensesame_codename = VERSION_NAME
+      this.vars.set('datetime', new Date().toString())
+      this.vars.set('opensesame_version', VERSION_NUMBER)
+      this.vars.set('opensesame_codename', VERSION_NAME)
       this.init_clock()
       this.init_display()
       this.reset_feedback()

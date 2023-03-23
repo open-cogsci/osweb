@@ -41,7 +41,7 @@ export default class Convertor {
       // If we're currently inside a multiline variable, check whether the
       // variable ends.
       if (items !== null && items[0] === '__end__') {
-        this.item.vars[this.variableName] = this.variable
+        this.item.vars.set(this.variableName, this.variable)
         this.variable = null
       } else {
         this.variable.push(line)
@@ -83,7 +83,7 @@ export default class Convertor {
         break
       case 'set':
         // Process a set statement.
-        this.item.vars[items[1]] = this.parseValue(items[2])
+        this.item.vars.set(items[1], this.parseValue(items[2]))
         break
       case 'setcycle':
         // Process a setcycle statement.

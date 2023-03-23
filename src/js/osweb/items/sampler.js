@@ -31,23 +31,24 @@ export default class Sampler extends GenericResponse {
   /** Reset all item variables to their default value. */
   reset () {
     this.block = false
-    this.vars.sample = ''
-    this.vars.pan = 0
-    this.vars.pitch = 1
-    this.vars.fade_in = 0
-    this.vars.stop_after = 0
-    this.vars.volume = 1
-    this.vars.duration = 'sound'
+    this.vars.set('sample', '')
+    this.vars.set('pan', 0)
+    this.vars.set('pitch', 1)
+    this.vars.set('fade_in', 0)
+    this.vars.set('stop_after', 0)
+    this.vars.set('volume', 1)
+    this.vars.set('duration', 'sound')
   }
 
   /** Implements the prepare phase of an item. */
   prepare () {
     // Create the sample
-    if (this.vars.sample !== '') {
+    const sample = this.vars.get('sample')
+    if (sample !== '') {
       // Retrieve the content from the file pool.
-      this._sample = this._runner._pool[this.syntax.eval_text(this.vars.sample, this.vars, false)]
+      this._sample = this._runner._pool[sample]
       if (typeof (this._sample) === 'undefined')
-        this.experiment._runner._debugger.addError(`"${this.vars.sample}" does not exist in the file pool`)
+        this.experiment._runner._debugger.addError(`"${sample}" does not exist in the file pool`)
       this._sampler = new SamplerBackend(this.experiment, this._sample)
       this._sampler.volume = this.vars.get("volume")
       this._sampler.duration = this.vars.get("duration")
@@ -56,7 +57,7 @@ export default class Sampler extends GenericResponse {
       this._sampler.pitch = this.vars.get("pitch")
     } else {
       // Show error message.
-      this._runner._debugger.addError('No sample has been specified in sampler: ' + this.vars.sample)
+      this._runner._debugger.addError(`No sample has been specified in sampler: ${sample}`)
     }
 
     // Inherited.

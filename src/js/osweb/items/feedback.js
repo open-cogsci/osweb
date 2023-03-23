@@ -25,7 +25,7 @@ export default class Feedback extends Sketchpad {
     super._complete()
 
     // Reset feedback variables.
-    if (this.vars.reset_variables === 'yes') {
+    if (this.vars.get('reset_variables') === 'yes') {
       this.experiment.reset_feedback()
     }
   }
@@ -36,7 +36,7 @@ export default class Feedback extends Sketchpad {
     super.reset()
 
     // Reset the variables.
-    this.vars.reset_variables = 'yes'
+    this.vars.set('reset_variables', 'yes')
   }
 
   /** Implements the prepare phase of an item. */
