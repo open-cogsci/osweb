@@ -46,7 +46,7 @@ export default class RepeatCycle extends Item {
     // Run item only one time.
     if (this._status !== constants.STATUS_FINALIZE) {
       if (this.experiment._runner._javascriptWorkspace._eval(condition)) {
-        this.experiment.vars.repeat_cycle = 1
+        this.experiment.vars.set('repeat_cycle', 1)
       }
 
       // Complete the current cycle.

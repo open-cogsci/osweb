@@ -416,28 +416,8 @@ export default class Canvas {
    * @param {String} - The style of the fixation dot.
    * @param {Object} styleArgs - Optional styling argument for the element.
    */
-  fixdot (x, y, style, styleArgs) {
-    // Check the color and style arguments.
-    style = (typeof style === 'undefined') ? 'default' : style
-
-    // Get the style
+  fixdot (x = 0, y = 0, style = 'default', styleArgs) {
     var elementStyle = this._getStyle(styleArgs)
-
-    if (typeof x === 'undefined') {
-      if (this.uniform_coordinates === true) {
-        x = 0
-      } else {
-        x = this._width / 2
-      }
-    }
-    if (typeof y === 'undefined') {
-      if (this.uniform_coordinates === true) {
-        y = 0
-      } else {
-        y = this._height / 2
-      }
-    }
-
     var s = 4
     var h = 2
     if (style.indexOf('large') !== -1) {
@@ -643,15 +623,16 @@ export default class Canvas {
    */
   init_display (experiment) {
     // Set the dimension properties.
-    this._height = experiment.vars.height
-    this._width = experiment.vars.width
+    this._height = experiment.vars.get('height')
+    this._width = experiment.vars.get('width')
 
     // Set the renderer dimensions.
     experiment._runner._renderer.resize(this._width, this._height)
 
     // Set the renderer background color.
-    experiment._runner._renderer.clear(this._styles._convertColorValue(experiment.vars.background, 'number'))
-    experiment._runner._renderer.backgroundColor = this._styles._convertColorValue(experiment.vars.background, 'number')
+    const background = experiment.vars.get('background')
+    experiment._runner._renderer.clear(this._styles._convertColorValue(background, 'number'))
+    experiment._runner._renderer.backgroundColor = this._styles._convertColorValue(background, 'number')
 
     // PIXU: Set the cursor visibility to none (default).
     experiment._runner._renderer.view.style.cursor = 'none'

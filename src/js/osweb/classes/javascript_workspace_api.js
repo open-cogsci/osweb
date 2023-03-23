@@ -29,8 +29,8 @@ export default class JavaScriptWorkspaceAPI {
    *
    * @example
    * set_subject_nr(1)
-   * console.log('Subject nr = ' + vars.subject_nr)
-   * console.log('Subject parity = ' + vars.subject_parity)
+   * console.log('Subject nr = ' + subject_nr)
+   * console.log('Subject parity = ' + subject_parity)
    **/
   set_subject_nr(nr) {
     this._experiment.set_subject(nr)

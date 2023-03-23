@@ -28,7 +28,7 @@ export default class Logger extends Item {
   reset () {
     this.logvars = []
     this.exclude_patterns = []
-    this.vars.auto_log = 'yes'
+    this.vars.set('auto_log', 'yes')
   }
 
   /**

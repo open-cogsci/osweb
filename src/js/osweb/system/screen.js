@@ -92,6 +92,8 @@ export default class Screen {
 
   /** Event handler which responds to full-screen change. */
   _fullScreenChanged () {
+    const width = this._runner._experiment.vars.get('width')
+    const height = this._runner._experiment.vars.get('height')
     // Check if we are dropping out of full-screen.
     if (document.fullscreenElement ||
       document.webkitFullscreenElement ||
@@ -121,17 +123,17 @@ export default class Screen {
         this._runner._renderer.view.style.margin = 'auto'
         this._runner._renderer.view.style.display = 'block'
         this._runner._renderer.view.style.position = 'absolute'
-        if ((this._runner._container.clientWidth - this._runner._experiment.vars.width) >
-            (this._runner._container.clientHeight - this._runner._experiment.vars.height)) {
-          const ar = (this._runner._container.clientHeight / this._runner._experiment.vars.height)
-          this._runner._renderer.resize(Math.round(this._runner._experiment.vars.width * ar), this._runner._container.clientHeight)
-          this._runner._experiment._scale_x = Math.round(this._runner._experiment.vars.width * ar) / this._runner._experiment.vars.width
-          this._runner._experiment._scale_y = (this._runner._container.clientHeight / this._runner._experiment.vars.height)
+        if ((this._runner._container.clientWidth - width) >
+            (this._runner._container.clientHeight - height)) {
+          const ar = (this._runner._container.clientHeight / height)
+          this._runner._renderer.resize(Math.round(width * ar), this._runner._container.clientHeight)
+          this._runner._experiment._scale_x = Math.round(width * ar) / this._runner._experiment.vars.width
+          this._runner._experiment._scale_y = (this._runner._container.clientHeight / height)
         } else {
-          const ar = (this._runner._container.clientWidth / this._runner._experiment.vars.width)
-          this._runner._renderer.resize(this._runner._container.clientWidth, Math.round(this._runner._experiment.vars.height * ar))
-          this._runner._experiment._scale_x = (this._runner._container.clientWidth / this._runner._experiment.vars.width)
-          this._runner._experiment._scale_y = Math.round(this._runner._experiment.vars.height * ar) / this._runner._experiment.vars.height
+          const ar = (this._runner._container.clientWidth / width)
+          this._runner._renderer.resize(this._runner._container.clientWidth, Math.round(height * ar))
+          this._runner._experiment._scale_x = (this._runner._container.clientWidth / width)
+          this._runner._experiment._scale_y = Math.round(height * ar) / height
         }
         this._runner._experiment._currentCanvas._container.scale.x = this._runner._experiment._scale_x
         this._runner._experiment._currentCanvas._container.scale.y = this._runner._experiment._scale_y
@@ -139,8 +141,8 @@ export default class Screen {
         break
       case 'exactFit':
         // Fit to the exact window size (cropping).
-        this._runner._experiment._scale_x = (this._runner._container.clientWidth / this._runner._experiment.vars.width)
-        this._runner._experiment._scale_y = (this._runner._container.clientHeight / this._runner._experiment.vars.height)
+        this._runner._experiment._scale_x = (this._runner._container.clientWidth / width)
+        this._runner._experiment._scale_y = (this._runner._container.clientHeight / height)
 
         // Reize the current canvas.
         this._runner._renderer.resize(this._runner._container.clientWidth, this._runner._container.clientHeight)
@@ -157,7 +159,7 @@ export default class Screen {
         this._runner._experiment._scale_y = 1
 
         // Fit to the exact window size (cropping).
-        this._runner._renderer.resize(this._runner._experiment.vars.width, this._runner._experiment.vars.height)
+        this._runner._renderer.resize(width, height)
         this._runner._experiment._currentCanvas._container.scale.x = 1
         this._runner._experiment._currentCanvas._container.scale.y = 1
         this._runner._renderer.render(this._runner._experiment._currentCanvas._container)

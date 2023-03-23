@@ -52,15 +52,15 @@ export default class InlineScript extends Item {
 
   /** Reset all item variables to their default value. */
   reset () {
-    this.vars._prepare = ''
-    this.vars._run = ''
+    this.vars.set('_prepare', '')
+    this.vars.set('_run', '')
   }
 
   /** Implements the prepare phase of an item. */
   prepare () {
     // Compile the script code to ast trees.
-    this._prepare_tree = this.experiment._runner._pythonParser._parse(this.vars._prepare)
-    this._run_tree = this.experiment._runner._pythonParser._parse(this.vars._run)
+    this._prepare_tree = this.experiment._runner._pythonParser._parse(this.vars.get('_prepare'))
+    this._run_tree = this.experiment._runner._pythonParser._parse(this.vars.get('_run'))
 
     // Execute the run code.
     if (this._prepare_tree !== null) {

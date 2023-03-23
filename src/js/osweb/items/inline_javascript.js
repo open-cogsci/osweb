@@ -23,8 +23,8 @@ export default class InlineJavaScript extends Item {
 
   /** Reset all item variables to their default value. */
   reset () {
-    this.vars._prepare = ''
-    this.vars._run = ''
+    this.vars.set('_prepare', '')
+    this.vars.set('_run', '')
   }
 
   /**
@@ -58,16 +58,16 @@ export default class InlineJavaScript extends Item {
             break
           default:
             if (read_run_lines === true) {
-              this.vars._run = this.vars._run + lines[i] + '\n'
+              this.vars.set('_run', this.vars.get('_run', null, false) + lines[i] + '\n')
             } else if (read_prepare_lines === true) {
-              this.vars._prepare = this.vars._prepare + lines[i] + '\n'
+              this.vars.set('_prepare', this.vars.get('_prepare', null, false) + lines[i] + '\n')
             }
           }
         } else {
           if (read_run_lines === true) {
-            this.vars._run = this.vars._run + lines[i] + '\n'
+            this.vars.set('_run', this.vars.get('_run', null, false) + lines[i] + '\n')
           } else if (read_prepare_lines === true) {
-            this.vars._prepare = this.vars._prepare + lines[i] + '\n'
+            this.vars.set('_prepare', this.vars.get('_prepare', null, false) + lines[i] + '\n')
           }
         }
       }
@@ -76,7 +76,7 @@ export default class InlineJavaScript extends Item {
 
   /** Implements the prepare phase of an item. */
   prepare () {
-    this.workspace.exec(this.vars._prepare)
+    this.workspace.exec(this.vars.get('_prepare', null, false))
     super.prepare()
   }
 
@@ -84,7 +84,7 @@ export default class InlineJavaScript extends Item {
   run () {
     super.run()
     this.set_item_onset()
-    this.workspace.exec(this.vars._run)
+    this.workspace.exec(this.vars.get('_run', null, false))
     this._complete()
   }
 }

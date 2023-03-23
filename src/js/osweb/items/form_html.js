@@ -16,7 +16,7 @@ export default class FormHTML extends Item {
   
   reset() {
     super.reset()
-    this.vars.margins = '50;50;50;50'
+    this.vars.set('margins', '50;50;50;50')
   }
   
   /**

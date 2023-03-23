@@ -23,14 +23,14 @@ export default class TouchResponse extends MouseResponse {
   reset () {
     super.reset()
     this.vars.set('allowed_responses', null)
-    this.vars._ncol = 2
-    this.vars._nrow = 1
+    this.vars.set("_ncol", 2)
+    this.vars.set("_nrow", 1)
   }
 
   /** Implements the prepare phase of an item. */
   prepare () {
     // Temp hack
-    this.experiment.vars.correct = -1
+    this.experiment.vars.set('correct' , -1)
     // Inherited.
     super.prepare()
   }
@@ -44,16 +44,16 @@ export default class TouchResponse extends MouseResponse {
     this.experiment._end_response_interval = retval.rtTime
     this.set_mouse_coordinates(retval.event.clientX, retval.event.clientY)
     // Calulate the row, column and cell.
-    this.col = Math.floor(
-      (this.experiment.vars.cursor_x + this.experiment.vars.width / 2) /
-        (this.experiment.vars.width / this.vars._ncol)
-    )
-    this.row = Math.floor(
-      (this.experiment.vars.cursor_y + this.experiment.vars.height / 2) /
-        (this.experiment.vars.height / this.vars._nrow)
-    )
-    this.cell = this.row * this.vars._ncol + this.col + 1
-    this.experiment.vars.response = this.cell
+    const cursor_x = this.experiment.vars.get('cursor_x')
+    const cursor_y = this.experiment.vars.get('cursor_y')
+    const width = this.experiment.vars.get('width')
+    const height = this.experiment.vars.get('height')
+    const ncol = this.vars.get('_ncol')
+    const nrow = this.vars.get('_nrow')
+    this.col = Math.floor((cursor_x + width / 2) / (width / ncol))
+    this.row = Math.floor((cursor_y + height / 2) / (height / nrow))
+    this.cell = this.row * ncol + this.col + 1
+    this.experiment.vars.set('response', this.cell)
     this.synonyms = [this.experiment.vars.get('response').toString()]
     this.response_bookkeeping()
   }

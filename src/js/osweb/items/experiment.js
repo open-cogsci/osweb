@@ -70,7 +70,7 @@ export default class Experiment extends Item {
     */
   set_subject (pNr) {
     // Sets the subject number and parity (even/ odd).
-    this.vars.set('subject_nr = pNr
+    this.vars.set('subject_nr', pNr)
     if ((pNr % 2) === 0) {
       this.vars.set('subject_parity', 'even')
     } else {
@@ -179,10 +179,10 @@ export default class Experiment extends Item {
 
       // Add closing message to debug system.
       this._runner._debugger.addMessage('experiment.run(): experiment started at ' + new Date().toUTCString())
-
-      if (this._runner._itemStore._items[this.vars.start] !== null) {
+      const start = this.vars.get('start')
+      if (this._runner._itemStore._items[start] !== null) {
         this._runner._itemStack.clear()
-        this._runner._itemStore.prepare(this.vars.start, this)
+        this._runner._itemStore.prepare(start, this)
       } else {
         this._runner._debugger.addError('Could not find the item that is the entry point of the experiment: ' + this.vars.start)
       }

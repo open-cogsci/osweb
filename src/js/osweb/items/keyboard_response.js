@@ -23,18 +23,15 @@ export default class KeyboardResponse extends GenericResponse {
   /** Resets all item variables to their default value. */
   reset () {
     this.process_feedback = true
-    this.vars.allowed_responses = null
-    this.vars.correct_response = null
-    this.vars.duration = 'keypress'
-    this.vars.flush = 'yes'
-    this.vars.timeout = 'infinite'
+    this.vars.set("allowed_responses", null)
+    this.vars.set("correct_response", null)
+    this.vars.set('duration', 'keypress')
+    this.vars.set('flush', 'yes')
+    this.vars.set('timeout', 'infinite')
   }
 
   /** Implements the prepare phase of the KeyboardResponse. */
   prepare () {
-    // Set the internal flush property.
-    this._flush = (this.vars.flush) ? this.vars.flush : 'yes'
-
     // Inherited.
     super.prepare()
   }
@@ -48,7 +45,7 @@ export default class KeyboardResponse extends GenericResponse {
     this.set_item_onset()
 
     // Flush responses, to make sure that earlier responses are not carried over.
-    if (this._flush === 'yes') {
+    if (this.vars.get('flush') === 'yes') {
       this._keyboard.flush()
     }
 

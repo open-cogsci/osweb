@@ -8,7 +8,7 @@ export default class InlineHTML extends FormHTML {
 
   reset() {
     super.reset()
-    this.vars.html = ''
+    this.vars.set('htm', '')
   }
 
   /**

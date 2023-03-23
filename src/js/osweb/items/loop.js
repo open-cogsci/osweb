@@ -82,15 +82,15 @@ export default class Loop extends Item {
   /** Reset all item variables to their default value. */
   reset () {
     this.orig_matrix = []
-    this.vars.cycles = 1
-    this.vars.repeat = 1
-    this.vars.skip = 0
-    this.vars.offset = 'no'
-    this.vars.order = 'random'
-    this.vars.item = ''
-    this.vars.break_if = 'never'
-    this.vars.source = 'table'
-    this.vars.source_file = ''
+    this.vars.set("cycles", 1)
+    this.vars.set("repeat", 1)
+    this.vars.set("skip", 0)
+    this.vars.set('offset', 'no')
+    this.vars.set('order', 'random')
+    this.vars.set('item', '')
+    this.vars.set('break_if', 'never')
+    this.vars.set('source', 'table')
+    this.vars.set('source_file', '')
     this._index = 0
     this._operations = []
     this._initialized = false
@@ -117,7 +117,7 @@ export default class Loop extends Item {
 
           switch (instruction) {
           case 'run':
-            if (params.length > 0) this.vars.item = params[0]
+            if (params.length > 0) this.vars.set('item', params[0])
             break
           case 'setcycle':
             if (params.length <= 2) {
@@ -210,9 +210,10 @@ export default class Loop extends Item {
   /** Implements the prepare phase of an item. */
   prepare () {
     // Make sure the item to run exists.
-    if (this.experiment.items._items[this.vars.item] === 'undefined') {
+    const item = this.vars.get('item')
+    if (this.experiment.items._items[item] === 'undefined') {
       this._runner._debugger.addError('Could not find an item which is called by loop item: ' +
-      this.name + ' (' + this.vars.item + ')')
+      this.name + ' (' + item + ')')
     }
     if (this.vars.get('source') === 'file') this.parseFileSource()
     this._initialized = false
@@ -252,20 +253,21 @@ export default class Loop extends Item {
       }
       // Next, we add the non-integer part of the repeats to the cycles array.
       const partialRepeats = this.vars.get('repeat') - wholeRepeats
+      const order = this.vars.get('order')
       if (partialRepeats > 0) {
         // Get an array of all cycles indices. (This syntax is like a range().)
         // For randomly ordered loops, shuffle the order of the indices.
         // This makes sure that the next step of determining the repeatcycles
         // is a 'random selection without replacement'
         let allCycles = [...Array(this.orig_matrix.length).keys()]
-        if (this.vars.order === 'random') {
+        if (order === 'random') {
           allCycles = shuffle(allCycles)
         }
         // Add the remaining cycles to the cycles array
         const remainder = Math.floor(this.orig_matrix.length * partialRepeats)
         cycles = [...cycles, ...allCycles.splice(0, remainder)]
       }
-      if (this.vars.order === 'random') {
+      if (order === 'random') {
         cycles = shuffle(cycles)
       }
       // Create a live matrix that takes into account the repeats and the
@@ -283,7 +285,7 @@ export default class Loop extends Item {
       this._index = null
     } // end init
     // Check if if the cycle must be repeated.
-    if (this.experiment.vars.repeat_cycle === 1 && this._index !== null) {
+    if (this.experiment.vars.get('repeat_cycle') === 1 && this._index !== null) {
       this._runner._debugger.msg('Repeating cycle: ' + this._index)
       this._cycles.push(this._index)
       if (this.vars.get('order') === 'random') {
@@ -298,7 +300,7 @@ export default class Loop extends Item {
     // Prepare for the current cycle
     this._index = this._cycles.shift()
     this.apply_cycle(this._index)
-    this.experiment.vars.repeat_cycle = 0
+    this.experiment.vars.set('repeat_cycle', 0)
     // Process the break-if statement
     const break_if_val = this.vars.get('break_if', undefined, false)
     this._break_if = ['never', ''].includes(break_if_val)
@@ -313,10 +315,11 @@ export default class Loop extends Item {
       }
     }
     // Execute the item to run
-    if (this._runner._itemStore._items[this.vars.item].type === 'sequence') {
-      this._runner._itemStore.prepare(this.vars.item, this)
+    const item = this.vars.get('item')
+    if (this._runner._itemStore._items[item].type === 'sequence') {
+      this._runner._itemStore.prepare(item, this)
     } else {
-      this._runner._itemStore.execute(this.vars.item, this)
+      this._runner._itemStore.execute(item, this)
     }
   }
 }

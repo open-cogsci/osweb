@@ -38,7 +38,7 @@ export default class Sketchpad extends GenericResponse {
   reset () {
     // Resets all item variables to their default value.
     this.elements = []
-    this.vars.duration = 'keypress'
+    this.vars.set('duration', 'keypress')
   }
 
   /** Process a time out response. */

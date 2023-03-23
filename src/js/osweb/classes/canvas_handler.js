@@ -77,8 +77,8 @@ export default class CanvasHandler {
    *
    * @example
    * var myCanvas = Canvas()
-   * var w = vars.width / 2
-   * var h = vars.height / 2
+   * var w = width / 2
+   * var h = height / 2
    * // Important: parameters are passed as an Object
    * myCanvas.arrow({sx: 0, sy: 0, w: w, h: h, head_width:100, body_length:0.5})
    *
@@ -293,8 +293,8 @@ export default class CanvasHandler {
    *
    * @example
    * var myCanvas = Canvas()
-   * var ex = vars.width / 2
-   * var ey = vars.height / 2
+   * var ex = width / 2
+   * var ey = height / 2
    * myCanvas.line({sx: 0, sy: 0, ex: ex, ey: ey})
    * 
    * @param {Object} obj

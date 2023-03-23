@@ -73,9 +73,10 @@ export default class GenericResponse extends Item {
         : item).filter(Boolean)
     if (response_array.length === 0)
       return null
-    if (this.vars.duration === 'keypress') {
+    const duration = this.vars.get('duration')
+    if (duration === 'keypress') {
         response_array = this._keyboard._get_default_from_synonym(response_array)
-      } else if (this.vars.duration === 'mouseclick') {
+      } else if (duration === 'mouseclick') {
         response_array = this._mouse._get_default_from_synonym(response_array)
       }
     return response_array
@@ -109,15 +110,16 @@ export default class GenericResponse extends Item {
     if ((this._duration === 'keypress') || (this._duration === 'mouseclick') ||
         (this._duration === 'sound') || (this._duration === 'video')) {
       this._duration = -1
-      if (this.vars.duration === 'keypress') {
+      const duration = this.vars.get('duration')
+      if (duration === 'keypress') {
         this.prepare_duration_keypress()
         this._responsetype = constants.RESPONSE_KEYBOARD
-      } else if (this.vars.duration === 'mouseclick') {
+      } else if (duration === 'mouseclick') {
         this.prepare_duration_mouseclick()
         this._responsetype = constants.RESPONSE_MOUSE
-      } else if (this.vars.duration === 'sound') {
+      } else if (duration === 'sound') {
         this._responsetype = constants.RESPONSE_SOUND
-      } else if (this.vars.duration === 'video') {
+      } else if (duration === 'video') {
         this._responsetype = constants.RESPONSE_VIDEO
       }
       return
@@ -154,9 +156,10 @@ export default class GenericResponse extends Item {
   
   /** Sets duration and allowed responses on the response object. **/
   configure_response_objects() {
-    if (this.vars.duration === 'keypress') {
+    const duration = this.vars.get('duration')
+    if (duration === 'keypress') {
       this._keyboard._set_config(this._final_duration, this._allowed_responses)
-    } else if (this.vars.duration === 'mouseclick') {
+    } else if (duration === 'mouseclick') {
       this._mouse._set_config(this._final_duration, this._allowed_responses, false)
     }
   }
@@ -195,22 +198,25 @@ export default class GenericResponse extends Item {
     // needs to be taken into account also such that the viewport always has
     // the same size in cursor coordinates, even if it's scaled down.
     const rect = this._runner._renderer.view.getBoundingClientRect()
+    const width = this.experiment.vars.get('width')
+    const height = this.experiment.vars.get('height')
     const scale = Math.min(
-      (rect.right - rect.left) / this.experiment.vars.width,
-      (rect.bottom - rect.top) / this.experiment.vars.height
+      (rect.right - rect.left) / width,
+      (rect.bottom - rect.top) / height
     )
-    const center_x = scale * this.experiment.vars.width / 2
-    const center_y = scale * this.experiment.vars.height / 2
-    this.experiment.vars.cursor_x = (clientX - center_x - rect.left) / scale
-    this.experiment.vars.cursor_y = (clientY - center_y - rect.top) / scale
+    const center_x = scale * width / 2
+    const center_y = scale * height / 2
+    this.experiment.vars.set('cursor_x', (clientX - center_x - rect.left) / scale)
+    this.experiment.vars.set('cursor_y', (clientY - center_y - rect.top) / scale)
   }
 
   /** Process a keyboard response. */
   process_response_keypress (retval) {
     this.experiment._start_response_interval = this.sri
     this.experiment._end_response_interval = retval.rtTime
-    this.experiment.vars.response = this.syntax.sanitize(retval.resp)
-    this.synonyms = this._keyboard._synonyms(this.experiment.vars.response)
+    const response = this.syntax.sanitize(retval.resp)
+    this.experiment.vars.set('response', response)
+    this.synonyms = this._keyboard._synonyms(response)
     this.response_bookkeeping()
   }
 
@@ -228,7 +234,7 @@ export default class GenericResponse extends Item {
   process_response_timeout () {
     this.experiment._start_response_interval = this.sri
     this.experiment._end_response_interval = this.experiment._runner._events._timeStamp
-    this.experiment.vars.response = 'None'
+    this.experiment.vars.set('response', 'None')
     this.synonyms = ['None', 'none']
     this.response_bookkeeping()
   }
@@ -246,23 +252,27 @@ export default class GenericResponse extends Item {
     if (this.process_feedback !== true)
       return
     if (this._correct_responses === null) {
-      this.experiment.vars.correct = 'undefined'
+      this.experiment.vars.set('correct', 'undefined')
       return
     }
-    this.experiment.vars.correct = 0
+    this.experiment.vars.set('correct', 0)
     for (let cr of this._correct_responses) {
       if (this.synonyms.includes(cr)) {
-        this.experiment.vars.correct = 1
-        this.experiment.vars.total_correct = this.experiment.vars.total_correct + 1
+        this.experiment.vars.set('correct', 1)
+        this.experiment.vars.set('total_correct', this.experiment.vars.total_correct + 1)
         break
       }
     }
-    this.experiment.vars.total_response_time = this.experiment.vars.total_response_time + this.experiment.vars.response_time
-    this.experiment.vars.total_responses = this.experiment.vars.total_responses + 1
-    this.experiment.vars.accuracy = Math.round(100.0 * this.experiment.vars.total_correct / this.experiment.vars.total_responses)
-    this.experiment.vars.acc = this.experiment.vars.accuracy
-    this.experiment.vars.average_response_time = Math.round(this.experiment.vars.total_response_time / this.experiment.vars.total_responses)
-    this.experiment.vars.avg_rt = this.experiment.vars.average_response_time
+    this.experiment.vars.set('total_response_time',
+      this.experiment.vars.get('total_response_time') + this.experiment.vars.get('response_time'))
+    this.experiment.vars.set('total_response',
+      this.experiment.vars.get('total_responses') + 1)
+    this.experiment.vars.set('accuracy', 
+      Math.round(100.0 * this.experiment.vars.get('total_correct') / this.experiment.vars.get('total_responses')))
+    this.experiment.vars.set('acc', this.experiment.vars.accuracy)
+    this.experiment.vars.set('average_response_time',
+      Math.round(this.experiment.vars.get('total_response_time') / this.experiment.vars.get('total_responses')))
+    this.experiment.vars.set('avg_rt', this.experiment.vars.get('average_response_time'))
     this.experiment.vars.set('correct_' + this.name, this.experiment.vars.correct)
   }
 

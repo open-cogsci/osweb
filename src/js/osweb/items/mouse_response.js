@@ -39,38 +39,27 @@ export default class MouseResponse extends GenericResponse {
     this.resp_codes['3'] = 'right_button'
     this.resp_codes['4'] = 'scroll_up'
     this.resp_codes['5'] = 'scroll_down'
-    this.vars.allowed_responses = null
-    this.vars.correct_response = null
-    this.vars.duration = 'mouseclick'
-    this.vars.flush = 'yes'
-    this.vars.show_cursor = 'yes'
-    this.vars.timeout = 'infinite'
+    this.vars.set("allowed_responses", null)
+    this.vars.set("correct_response", null)
+    this.vars.set('duration', 'mouseclick')
+    this.vars.set('flush', 'yes')
+    this.vars.set('show_cursor', 'yes')
+    this.vars.set('timeout', 'infinite')
   }
 
-  /** Implements the prepare phase of the Sketschpad. */
   prepare () {
-    // Set the internal flush property.
-    this._flush = (this.vars.flush) ? this.vars.flush : 'yes'
-
-    // Inherited.
     super.prepare()
   }
 
-  /** Implements the run phase of the Sketschpad. */
   run () {
-    // Inherited.
     super.run()
-
-    // Record the onset of the current item.
     this.set_item_onset()
-
-    // Show the cursor if defined.
-    if (this.vars.show_cursor === 'yes') {
+    if (this.vars.get('show_cursor') === 'yes') {
       this._mouse.show_cursor(true)
     }
 
     // Flush responses, to make sure that earlier responses are not carried over.
-    if (this._flush === 'yes') {
+    if (this.vars.get("flush") === 'yes') {
       this._mouse.flush()
     }
 
@@ -95,7 +84,7 @@ export default class MouseResponse extends GenericResponse {
 
     yield
     // Show the cursor if defined.
-    if (this.vars.show_cursor === 'yes') {
+    if (this.vars.get('show_cursor') === 'yes') {
       this._mouse.show_cursor(true)
     }
 

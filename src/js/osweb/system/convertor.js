@@ -78,7 +78,7 @@ export default class Convertor {
           })
         } else {
           // Process a run statement for a loop item.
-          this.item.vars.item = items[1]
+          this.item.vars.set('item', items[1])
         }
         break
       case 'set':

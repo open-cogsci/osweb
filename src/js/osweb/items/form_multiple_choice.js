@@ -13,7 +13,7 @@ export default class FormMultipleChoice extends FormHTML {
             values.push(box.value)
     }
     this.experiment.vars.set(
-        this.vars.form_var,
+        this.vars.get('form_var'),
         (values.length > 0) ? values.join(';') : 'no'
     )
     super.resumeOSWeb()

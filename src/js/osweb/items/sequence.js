@@ -74,7 +74,7 @@ export default class Sequence extends Item {
   /** Reset all item variables to their default value. */
   reset () {
     this.items = []
-    this.vars.flush_keyboard = 'yes'
+    this.vars.set('flush_keyboard', 'yes')
   }
 
   /**
@@ -118,7 +118,7 @@ export default class Sequence extends Item {
     super.prepare()
 
     // Create a keyboard to flush responses at the start of the run phase
-    if (this.vars.flush_keyboard === 'yes') {
+    if (this.vars.get('flush_keyboard') === 'yes') {
       this._keyboard = new Keyboard(this.experiment)
     } else {
       this._keyboard = null
@@ -139,7 +139,7 @@ export default class Sequence extends Item {
     // Check if all items have been processed.
     if (this._index < this._items.length) {
       // Flush the keyboard at the beginning of the sequence.
-      if ((this._index === 0) && (this.vars.flush_keyboard === 'yes')) {
+      if ((this._index === 0) && (this.vars.get('flush_keyboard') === 'yes')) {
         this._keyboard.flush()
       }
 

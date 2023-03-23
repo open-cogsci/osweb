@@ -47,9 +47,9 @@ export default class AdvancedDelay extends Item {
 
   /** Resets all item variables to their default value. */
   reset () {
-    this.vars.duration = 1000
-    this.vars.jitter = 0
-    this.vars.jitter_mode = 'Uniform'
+    this.vars.set("duration", 1000)
+    this.vars.set("jitter", 0)
+    this.vars.set('jitter_mode', 'Uniform')
   }
 
   /** Implements the prepare phase of an item. */

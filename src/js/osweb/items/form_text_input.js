@@ -14,7 +14,7 @@ export default class FormTextInput extends FormHTML {
   checkReturnPress (event) {
     if (event.keyCode !== 13)
       return
-    this.experiment.vars.set(this.vars.form_var, this._textArea.value)
+    this.experiment.vars.set(this.vars.get('form_var'), this._textArea.value)
     this.resumeOSWeb()
   }
 
