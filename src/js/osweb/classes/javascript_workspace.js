@@ -1,33 +1,10 @@
 import JavaScriptWorkspaceAPI from '../classes/javascript_workspace_api'
 import CanvasHandler from '../classes/canvas_handler'
+import VarStoreHandler from '../classes/var_store_handler'
 import random from 'random-ext'
 import convert from 'color-convert'
 import csvParse from "csv-parse/lib/sync"
 import {range, enumerate, items, zip, zipLongest} from 'pythonic'
-
-
-/**
- * A proxy handler for the VarStore that maps properties onto calls to
- * VarStore.get(), so that variables are automatically evaluated, just like
- * in the OpenSesame `var` API.
- */
-class VarStoreHandler {
-  get (target, prop) {
-    // The VarStore sets a property on itself to bypass this proxy. This
-    // avoids feedback loops when the VarStore tries to get a variable without
-    // evaluating it.
-    if (target._bypass_proxy === true) {
-      return target[prop]
-    }
-    return typeof target[prop] === 'string'
-      ? target.get(prop, null, true, null, false)
-      : target[prop]
-  }
-  set (target, key, value) {
-    // Use the set method to make sure that variables are registered.
-    target.set(key, value)
-  }
-}
 
 
 /**

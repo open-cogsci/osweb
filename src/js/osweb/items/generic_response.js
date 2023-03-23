@@ -259,21 +259,21 @@ export default class GenericResponse extends Item {
     for (let cr of this._correct_responses) {
       if (this.synonyms.includes(cr)) {
         this.experiment.vars.set('correct', 1)
-        this.experiment.vars.set('total_correct', this.experiment.vars.total_correct + 1)
+        this.experiment.vars.set('total_correct', this.experiment.vars.get('total_correct') + 1)
         break
       }
     }
     this.experiment.vars.set('total_response_time',
       this.experiment.vars.get('total_response_time') + this.experiment.vars.get('response_time'))
-    this.experiment.vars.set('total_response',
+    this.experiment.vars.set('total_responses',
       this.experiment.vars.get('total_responses') + 1)
     this.experiment.vars.set('accuracy', 
       Math.round(100.0 * this.experiment.vars.get('total_correct') / this.experiment.vars.get('total_responses')))
-    this.experiment.vars.set('acc', this.experiment.vars.accuracy)
+    this.experiment.vars.set('acc', this.experiment.vars.get('accuracy'))
     this.experiment.vars.set('average_response_time',
       Math.round(this.experiment.vars.get('total_response_time') / this.experiment.vars.get('total_responses')))
     this.experiment.vars.set('avg_rt', this.experiment.vars.get('average_response_time'))
-    this.experiment.vars.set('correct_' + this.name, this.experiment.vars.correct)
+    this.experiment.vars.set('correct_' + this.name, this.experiment.vars.get('correct'))
   }
 
   /**

@@ -1,3 +1,4 @@
+import VarStoreHandler from '../classes/var_store_handler'
 import filbert from 'filbert'
 import PythonMath from './python_math.js'
 import PythonOpenSesame from './python_opensesame.js'
@@ -41,7 +42,8 @@ export default class PythonParser {
     this._variables.exp = this._runner._experiment
     this._variables.items = this._runner._itemStore
     this._variables.pool = this._runner._pool
-    this._variables.var = this._runner._experiment.vars
+    this._variables.var = new Proxy(
+      this._runner._experiment.vars, new VarStoreHandler())
 
     // Set the console handler.
     if (this._runner._onConsole !== null) {
