@@ -71,9 +71,11 @@ export default class JavaScriptWorkspace {
     }
     if (this._script_element !== null)
       this._script_container.removeChild(this._script_element)
+    this.current_script = js
     this._script_element = document.createElement('script')
     this._script_element.innerHTML = `_workspace._result = ${js}`
     this._script_container.appendChild(this._script_element)
+    this.current_script = null
     return this._result
   }
   
@@ -90,8 +92,10 @@ export default class JavaScriptWorkspace {
     }
     if (this._script_element !== null)
       this._script_container.removeChild(this._script_element)
+    this.current_script = js
     this._script_element = document.createElement('script')
     this._script_element.innerHTML = js
     this._script_container.appendChild(this._script_element)
+    this.current_script = null
   }
 }

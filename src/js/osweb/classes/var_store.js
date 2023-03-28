@@ -19,19 +19,19 @@ export default class VarStore {
   /**
    * Get the value of a variable from the store (or thje parent store).
    * @param {String} variable - The name of the variable.
-   * @param {Boolean|Number|String} defaultValue - The default value for the variable.
    * @param {Object} evaluate - The parent global var_store.
-   * @param {Object} valid - The parent global var_store.
-   * @param {Boolean} addQuotes - The add quotes toggle.
+   * @param {object} defaultValue - A default value for if the variable is not
+   *   found. If no default is specified, an error is thrown if the variable
+   *   is not found.
    * @return {Boolean|Number|String} - The value of the given variable.
    */
-  get (variable, defaultValue = null, evaluate = true, valid = null, addQuotes = false) {
+  get (variable, evaluate = true, defaultValue = null) {
     var value = null
     // Gets an experimental variable.
     if (variable in this._scope) {
       this._bypass_proxy = true // Avoid Proxy feedback loop
       if (typeof this._scope[variable] === 'string' && evaluate === true) {
-        value = this._item.syntax.eval_text(this._scope[variable], null, addQuotes)
+        value = this._item.syntax.eval_text(this._scope[variable])
       } else {
         value = this._scope[variable]
       }
@@ -41,13 +41,17 @@ export default class VarStore {
     if (value == null && this._parent && variable in this._parent._scope) {
       this._parent._bypass_proxy = true // Avoid Proxy feedback loop
       if (typeof this._parent._scope[variable] === 'string' && evaluate === true) {
-        value = this._item.syntax.eval_text(this._parent._scope[variable], null, addQuotes)
+        value = this._item.syntax.eval_text(this._parent._scope[variable])
       } else {
         value = this._parent._scope[variable]
       }
       this._parent._bypass_proxy = false
     }
-    // Return function result.
+    if (value === null) {
+      if (defaultValue !== null)
+        return defaultValue
+      throw `VariableDoesNotExist: Variable ${variable} does not exist`
+    }
     return value
   }
 

@@ -32,8 +32,8 @@ export default class GenericResponse extends Item {
   /** Implements the complete phase of the general response item. */
   _complete () {
     // Check if a timeout has occured which must be treaded as a response.
-    let timeout = this.vars.get('timeout')
-    if ((typeof timeout !== 'undefined') &&
+    let timeout = this.vars.get('timeout', true, -1)
+    if ((timeout !== -1) &&
       ((this.experiment._runner._events._timeStamp - this.experiment.vars.get('time_' + this.name)) > timeout)) {
       // Process the timeout none response.
       this.process_response_timeout()
@@ -84,8 +84,8 @@ export default class GenericResponse extends Item {
 
   /** Prepare the list with allowed responses */
   prepare_allowed_responses () {
-    this._allowed_responses = this._prepare_responses(this.vars.get('allowed_responses'))
-    if ((this._allowed_responses !== null) && (this._allowed_responses.length === 0)) {
+    this._allowed_responses = this._prepare_responses(this.vars.get('allowed_responses', true, -1))
+    if ((this._allowed_responses !== -1) && (this._allowed_responses.length === 0)) {
       this.experiment._runner._debugger.addError(
         'Defined responses are not valid in keyboard_response: ' +
         this.name + ' (' + this.vars.get('allowed_responses') + ')')
@@ -94,8 +94,8 @@ export default class GenericResponse extends Item {
   
   /** Prepare the list with correct responses */
   prepare_correct_responses () {
-    this._correct_responses = this._prepare_responses(this.vars.get('correct_response'))
-    if ((this._correct_responses !== null) && (this._correct_responses.length === 0)) {
+    this._correct_responses = this._prepare_responses(this.vars.get('correct_response', true, -1))
+    if ((this._correct_responses !== -1) && (this._correct_responses.length === 0)) {
       this.experiment._runner._debugger.addError(
         'Correct response is not valid in keyboard_response: ' +
         this.name + ' (' + this.vars.get('correct_response') + ')')
@@ -149,14 +149,14 @@ export default class GenericResponse extends Item {
 
   /** Prepare the system for a timeout. */
   prepare_timeout () {
-    let timeout = this.vars.get('timeout')
-    if (timeout === null) return
+    let timeout = this.vars.get('timeout', true, -1)
+    if (timeout ===  -1) return
     this._timeout = (typeof timeout === 'number') ? timeout : -1
   }
   
   /** Sets duration and allowed responses on the response object. **/
   configure_response_objects() {
-    const duration = this.vars.get('duration')
+    const duration = this.vars.get('duration', true, -1)
     if (duration === 'keypress') {
       this._keyboard._set_config(this._final_duration, this._allowed_responses)
     } else if (duration === 'mouseclick') {

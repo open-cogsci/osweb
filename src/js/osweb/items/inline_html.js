@@ -20,7 +20,7 @@ export default class InlineHTML extends FormHTML {
     // to-be-evaluated parts based on whatever is in-between. Finally, we
     // reverse the indices and evaluate the to-be-evaluated HTML parts from the
     // end to the beginning.
-    let html = this.vars.get('html', null, false)
+    let html = this.vars.get('html', false)
     let start_pos = 0
     const to_eval = []
     for (const match of html.matchAll(/<script>.*?<\/script>/isg)) {
