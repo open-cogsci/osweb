@@ -17,7 +17,6 @@ export default class Styles {
     // Set class private properties.
     if (typeof (item) === 'undefined') {
       this._background_color = 0x000000
-      this._bidi = false
       this._color = 'white'
       this._fill = false
       this._font_bold = false
@@ -28,17 +27,16 @@ export default class Styles {
       this._html = false
       this._penwidth = 1
     } else {
-      this.background_color = item.vars.get('background', 0x000000)
-      this.bidi = item.vars.get('bidi', 'no')
-      this.color = item.vars.get('foreground', 'white')
-      this.fill = item.vars.get('fill', 'no') === 'yes'
-      this.font_bold = item.vars.get('font_bold', 'no')
-      this.font_family = item.vars.get('font_family', 'Arial')
-      this.font_italic = item.vars.get('font_italic', 'no')
-      this.font_size = item.vars.get('font_size', 24)
-      this.font_underline = item.vars.get('font_underline', 'no')
-      this.html = item.vars.get('html', 'no')
-      this.penwidth = item.vars.get('penwidth', 1)
+      this.background_color = item.vars.get('background', true, 0x000000)
+      this.color = item.vars.get('foreground', true, 'white')
+      this.fill = item.vars.get('fill', true, 'no') === 'yes'
+      this.font_bold = item.vars.get('font_bold', true, 'no')
+      this.font_family = item.vars.get('font_family', true, 'Arial')
+      this.font_italic = item.vars.get('font_italic', true, 'no')
+      this.font_size = item.vars.get('font_size', true, 24)
+      this.font_underline = item.vars.get('font_underline', true, 'no')
+      this.html = item.vars.get('html', true, 'no')
+      this.penwidth = item.vars.get('penwidth', true, 1)
     }
   }
 
@@ -135,22 +133,6 @@ export default class Styles {
    */
   set background_color (val) {
     this._background_color = this._convertColorValue(val, 'number')
-  }
-
-  /**
-   * Get the bidi value.
-   * @return {Boolean} The bidi value.
-   */
-  get bidi () {
-    return this._bidi
-  }
-
-  /**
-   * Set the bidi value.
-   * @param {Boolean} val - The bidi value to set.
-   */
-  set bidi (val) {
-    this._bidi = this._checkVal(val)
   }
 
   /**

@@ -65,7 +65,7 @@ export default class GenericResponse extends Item {
    * responses.
    **/
   _prepare_responses (responses) {
-    if (responses === null)
+    if (responses === -1)
       return null
     let response_array = String(responses).split(';')
       .map(item => (typeof item === 'string')
@@ -73,7 +73,7 @@ export default class GenericResponse extends Item {
         : item).filter(Boolean)
     if (response_array.length === 0)
       return null
-    const duration = this.vars.get('duration')
+    const duration = this.vars.get('duration', true, -1)
     if (duration === 'keypress') {
         response_array = this._keyboard._get_default_from_synonym(response_array)
       } else if (duration === 'mouseclick') {
@@ -85,7 +85,7 @@ export default class GenericResponse extends Item {
   /** Prepare the list with allowed responses */
   prepare_allowed_responses () {
     this._allowed_responses = this._prepare_responses(this.vars.get('allowed_responses', true, -1))
-    if ((this._allowed_responses !== -1) && (this._allowed_responses.length === 0)) {
+    if ((this._allowed_responses !== null) && (this._allowed_responses.length === 0)) {
       this.experiment._runner._debugger.addError(
         'Defined responses are not valid in keyboard_response: ' +
         this.name + ' (' + this.vars.get('allowed_responses') + ')')
@@ -95,7 +95,7 @@ export default class GenericResponse extends Item {
   /** Prepare the list with correct responses */
   prepare_correct_responses () {
     this._correct_responses = this._prepare_responses(this.vars.get('correct_response', true, -1))
-    if ((this._correct_responses !== -1) && (this._correct_responses.length === 0)) {
+    if ((this._correct_responses !== null) && (this._correct_responses.length === 0)) {
       this.experiment._runner._debugger.addError(
         'Correct response is not valid in keyboard_response: ' +
         this.name + ' (' + this.vars.get('correct_response') + ')')
@@ -104,22 +104,23 @@ export default class GenericResponse extends Item {
 
   // Prepare the duration of the stimulus interaction. */
   prepare_duration () {
-    this._duration = this.syntax.remove_quotes(this.vars.get('duration'))
-    if (this._duration === null)
+    this._duration = this.vars.get('duration', true, -1)
+    if (this._duration === -1) {
+      this._duration = 0
       return
+    }
     if ((this._duration === 'keypress') || (this._duration === 'mouseclick') ||
         (this._duration === 'sound') || (this._duration === 'video')) {
-      this._duration = -1
-      const duration = this.vars.get('duration')
-      if (duration === 'keypress') {
+      this._final_duration = (this._timeout !== null) ? this._timeout : -1
+      if (this._duration === 'keypress') {
         this.prepare_duration_keypress()
         this._responsetype = constants.RESPONSE_KEYBOARD
-      } else if (duration === 'mouseclick') {
+      } else if (this._duration === 'mouseclick') {
         this.prepare_duration_mouseclick()
         this._responsetype = constants.RESPONSE_MOUSE
-      } else if (duration === 'sound') {
+      } else if (this._duration === 'sound') {
         this._responsetype = constants.RESPONSE_SOUND
-      } else if (duration === 'video') {
+      } else if (this._duration === 'video') {
         this._responsetype = constants.RESPONSE_VIDEO
       }
       return
@@ -135,27 +136,23 @@ export default class GenericResponse extends Item {
 
   /** Prepare the system for a keyboard duration interval. */
   prepare_duration_keypress () {
-    // Prepare a keyboard duration.
     this._keyboard = new Keyboard(this.experiment)
-    this._final_duration = (this._timeout !== -1) ? this._timeout : this._duration
   }
 
   /** Prepare the system for a mouseclick duration interval. */
   prepare_duration_mouseclick () {
-    // Prepare a mouseclick duration.
     this._mouse = new Mouse(this.experiment)
-    this._final_duration = (this._timeout !== -1) ? this._timeout : this._duration
   }
 
   /** Prepare the system for a timeout. */
   prepare_timeout () {
     let timeout = this.vars.get('timeout', true, -1)
-    if (timeout ===  -1) return
-    this._timeout = (typeof timeout === 'number') ? timeout : -1
+    this._timeout = (typeof timeout === 'number' && timeout !== -1) ? timeout : null
   }
   
   /** Sets duration and allowed responses on the response object. **/
   configure_response_objects() {
+    // We get duration again, because this._duration can be set to -1
     const duration = this.vars.get('duration', true, -1)
     if (duration === 'keypress') {
       this._keyboard._set_config(this._final_duration, this._allowed_responses)
@@ -168,26 +165,26 @@ export default class GenericResponse extends Item {
   process_response () {
     // Start stimulus response cycle.
     switch (this._responsetype) {
-    case constants.RESPONSE_NONE:
-      // Duration is 0, so complete the stimulus/response cycle.
-      this._status = constants.STATUS_FINALIZE
-      this._complete()
-      break
-    case constants.RESPONSE_DURATION:
-      this.sleep_for_duration()
-      break
-    case constants.RESPONSE_KEYBOARD:
-      this._keyboard.get_key()
-      break
-    case constants.RESPONSE_MOUSE:
-      this._mouse.get_click()
-      break
-    case constants.RESPONSE_SOUND:
-      this._sampler.wait()
-      break
-    case constants.RESPONSE_VIDEO:
-      this._video_player.wait()
-      break
+      case constants.RESPONSE_NONE:
+        // Duration is 0, so complete the stimulus/response cycle.
+        this._status = constants.STATUS_FINALIZE
+        this._complete()
+        break
+      case constants.RESPONSE_DURATION:
+        this.sleep_for_duration()
+        break
+      case constants.RESPONSE_KEYBOARD:
+        this._keyboard.get_key()
+        break
+      case constants.RESPONSE_MOUSE:
+        this._mouse.get_click()
+        break
+      case constants.RESPONSE_SOUND:
+        this._sampler.wait()
+        break
+      case constants.RESPONSE_VIDEO:
+        this._video_player.wait()
+        break
     }
   }
 
@@ -242,9 +239,12 @@ export default class GenericResponse extends Item {
   /** General response logging after a stimulus/response. */
   response_bookkeeping () {
     // The respone and response_time variables are always set, for every response item
-    this.experiment.vars.set('response_time', this.experiment._end_response_interval - this.experiment._start_response_interval)
-    this.experiment.vars.set('response_' + this.name, this.experiment.vars.get('response'))
-    this.experiment.vars.set('response_time_' + this.name, this.experiment.vars.get('response_time'))
+    this.experiment.vars.set('response_time',
+      this.experiment._end_response_interval - this.experiment._start_response_interval)
+    this.experiment.vars.set('response_' + this.name,
+      this.experiment.vars.get('response'))
+    this.experiment.vars.set('response_time_' + this.name,
+      this.experiment.vars.get('response_time'))
     this.experiment._start_response_interval = null
     // But correctness information is only set for dedicated response items,
     // such as keyboard_response items, because otherwise we might confound the
@@ -253,14 +253,14 @@ export default class GenericResponse extends Item {
       return
     if (this._correct_responses === null) {
       this.experiment.vars.set('correct', 'undefined')
-      return
-    }
-    this.experiment.vars.set('correct', 0)
-    for (let cr of this._correct_responses) {
-      if (this.synonyms.includes(cr)) {
-        this.experiment.vars.set('correct', 1)
-        this.experiment.vars.set('total_correct', this.experiment.vars.get('total_correct') + 1)
-        break
+    } else {
+      this.experiment.vars.set('correct', 0)
+      for (let cr of this._correct_responses) {
+        if (this.synonyms.includes(cr)) {
+          this.experiment.vars.set('correct', 1)
+          this.experiment.vars.set('total_correct', this.experiment.vars.get('total_correct') + 1)
+          break
+        }
       }
     }
     this.experiment.vars.set('total_response_time',
@@ -272,14 +272,16 @@ export default class GenericResponse extends Item {
     this.experiment.vars.set('acc', this.experiment.vars.get('accuracy'))
     this.experiment.vars.set('average_response_time',
       Math.round(this.experiment.vars.get('total_response_time') / this.experiment.vars.get('total_responses')))
-    this.experiment.vars.set('avg_rt', this.experiment.vars.get('average_response_time'))
-    this.experiment.vars.set('correct_' + this.name, this.experiment.vars.get('correct'))
+    this.experiment.vars.set('avg_rt',
+      this.experiment.vars.get('average_response_time'))
+    this.experiment.vars.set('correct_' + this.name,
+      this.experiment.vars.get('correct'))
   }
 
   /**
-     * Sets or resets the start of the stimulus response interval.
-     * @param {Boolean} reset - If true reset the sri value.
-     */
+   * Sets or resets the start of the stimulus response interval.
+   * @param {Boolean} reset - If true reset the sri value.
+   **/
   set_sri (reset) {
     // Sets the start of the response interval.
     if (reset === true) {
@@ -295,19 +297,16 @@ export default class GenericResponse extends Item {
 
   /** Sleep for a specified time. */
   sleep_for_duration () {
-    // Sleep for a specified time.
     this.sleep(this._duration)
   }
 
   /** Implements the prepare phase of the general response item. */
   prepare () {
-    // Implements the prepare phase of the item.
     this.prepare_timeout()
     this.prepare_duration()
     this.prepare_allowed_responses()
     this.prepare_correct_responses()
     this.configure_response_objects()
-    // Inherited.
     super.prepare()
   }
 }

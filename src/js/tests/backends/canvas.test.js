@@ -161,7 +161,6 @@ describe('Canvas', () => {
       })
       expect(style).toHaveProperty('_fill', true)
       expect(style).toHaveProperty('_penwidth', 10)
-      expect(style._bidi).toBe(defaultStyles._bidi)
     })
   })
 

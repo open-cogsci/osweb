@@ -285,7 +285,7 @@ export default class Loop extends Item {
       this._index = null
     } // end init
     // Check if if the cycle must be repeated.
-    if (this.experiment.vars.get('repeat_cycle') === 1 && this._index !== null) {
+    if (this.experiment.vars.get('repeat_cycle', true, -1) === 1 && this._index !== null) {
       this._runner._debugger.msg('Repeating cycle: ' + this._index)
       this._cycles.push(this._index)
       if (this.vars.get('order') === 'random') {
@@ -302,7 +302,7 @@ export default class Loop extends Item {
     this.apply_cycle(this._index)
     this.experiment.vars.set('repeat_cycle', 0)
     // Process the break-if statement
-    const break_if_val = this.vars.get('break_if', undefined, false)
+    const break_if_val = this.vars.get('break_if', false)
     this._break_if = ['never', ''].includes(break_if_val)
       ? null
       : break_if_val

@@ -30,7 +30,6 @@ set description "The main experiment item"
 set coordinates uniform
 set compensation 0
 set canvas_backend xpyriment
-set bidi no
 set background black
 
 define sequence experiment

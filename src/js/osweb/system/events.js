@@ -201,7 +201,6 @@ export default class Events {
       state: keyboardState,
       type: constants.RESPONSE_KEYBOARD
     }
-
     // Convert response to proper keyboard token.
     keyboardResponse.resp = this._convertKeyCode(event)
 
@@ -352,11 +351,10 @@ export default class Events {
     case constants.TIMER_WAIT:
       // Set current time stamp
       this._timeStamp = this._currentItem.clock.time()
-
       // Check if a time out occures or a valid response is given.
       if (((this._timeOut === -1) && ((this._responseGiven === true) || (this._videoHasEnded === true))) ||
-                    ((this._timeOut > 0) && ((this._responseType === constants.RESPONSE_KEYBOARD) || (this._responseType === constants.RESPONSE_MOUSE)) && (this._responseGiven === true)) ||
-                    ((this._timeOut > 0) && ((this._timeStamp - this._currentItem.experiment.vars.get('time_' + this._currentItem.name)) > this._timeOut))) {
+          ((this._timeOut > 0) && ((this._responseType === constants.RESPONSE_KEYBOARD) || (this._responseType === constants.RESPONSE_MOUSE)) && (this._responseGiven === true)) ||
+          ((this._timeOut > 0) && ((this._timeStamp - this._currentItem.experiment.vars.get('time_' + this._currentItem.name)) > this._timeOut))) {
         this.proceed()
       } else {
         // Update the current item without response.

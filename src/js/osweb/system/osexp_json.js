@@ -35,7 +35,6 @@ const OpenSesame = {
     color_backend: 'legacy',
     clock_backend: 'legacy',
     canvas_backend: 'legacy',
-    bidi: false,
     background: 'black',
     items: [{
       type: 'sampler',

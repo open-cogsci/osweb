@@ -178,14 +178,10 @@ export default class Keyboard extends ResponseDevice {
    * @param {Array} keyList - List of acceptable response keys.
    */
   get_key (timeOut, keyList) {
-    // Collects a single key press.
     this._keyList = (typeof keyList === 'undefined') ? this._keyList : keyList
     this._timeOut = (typeof timeOut === 'undefined') ? this._timeOut : timeOut
-
-    if (this._experiment !== null) {
-      // Set the event processor.
+    if (this._experiment !== null)
       this._experiment._runner._events._run(this._timeOut, constants.RESPONSE_KEYBOARD, this._keyList)
-    }
   }
 
   /**
