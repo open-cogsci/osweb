@@ -155,14 +155,13 @@ export default class Item {
     if (script !== null) {
       this.parse_multiline_vars(script)
       const lines = script.split('\n')
-      const pattern = /__(\w+)__/gms
       let in_multi = false
       for (let line of lines) {
         if (in_multi) {
           if (line === '__end__') in_multi = false
           continue
         }
-        if (pattern.exec(line)) {
+        if (/__(\w+)__/gms.test(line)) {
           in_multi = true
           continue
         }
