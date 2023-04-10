@@ -76,7 +76,7 @@ export default class Runner {
         transparent: false,
         resolution: 1
       })
-      this._renderer.backgroundColor = 0x000000
+      this._renderer.backgroundColor = 0xFFFFFF;
 
       // Append the canvas to the container.
       this._container.appendChild(this._renderer.view)
@@ -118,9 +118,7 @@ export default class Runner {
 
       // Set up the introscreen.
       this._screen._setupIntroScreen()
-
       this._screen._updateIntroScreen('Loading experiment.')
-      this._screen._updateProgressBar(-1)
 
       // Load the script file, using the source parameter.
       try {

@@ -216,21 +216,21 @@ export default class Screen {
       const oswebLogo = Sprite.from(logoPath)
       const oswebTitle = new Text('OSWeb', {
         fontFamily: 'Arial',
-        fontSize: 26,
-        fill: '#FFFFFF'
+        fontSize: 48,
+        fill: '#607d8b'
       })
       const versionInfo = new Text(VERSION_NUMBER, {
         fontFamily: 'Arial',
-        fontSize: 16,
-        fill: '#FFFFFF'
+        fontSize: 24,
+        fill: '#607d8b'
       })
 
       const copyrightText = new Text(
         `Copyright Jaap Bos, Daniel Schreij & Sebastiaan Mathot, 2016 - ${(new Date()).getFullYear()}`,
         {
           fontFamily: 'Arial',
-          fontSize: 12,
-          fill: '#FFFFFF'
+          fontSize: 16,
+          fill: '#607d8b'
         }
       )
 
@@ -238,7 +238,7 @@ export default class Screen {
 
       oswebLogo.position.set(center.x - oswebLogo.width / 2, 50)
       oswebTitle.position.set(center.x - oswebTitle.width / 2, 215)
-      versionInfo.position.set(center.x - versionInfo.width / 2, 250)
+      versionInfo.position.set(center.x - versionInfo.width / 2, 270)
       copyrightText.position.set(
         center.x - copyrightText.width / 2,
         center.y * 2 - copyrightText.height * 2
@@ -246,8 +246,8 @@ export default class Screen {
 
       this._statusText = new Text('', {
         fontFamily: 'Arial',
-        fontSize: 18,
-        fill: '#FFFFFF'
+        fontSize: 24,
+        fill: '#607d8b'
       })
       this._statusText.position.set(
         center.x - this._statusText.width / 2,
@@ -268,11 +268,10 @@ export default class Screen {
       // Update inroscreen.
       if ((typeof text === "undefined") || (text.length === 0)) {
         text = `
-    Your participation in this experiment should be anonymous.
-        Never provide any personal or sensitive information
-            (e.g. credit card or social security numbers).
+Never provide personal or sensitive information
+    such as credit card numbers or PIN codes
 
-                    Click here with the mouse to begin.`
+           Click or touch the screen to begin!`
       }
       this._updateIntroScreen(text)
 
@@ -322,50 +321,6 @@ export default class Screen {
         this._introScreen.removeChild(this._introScreen.children[i])
       }
       this._runner._renderer.render(this._introScreen)
-    }
-  }
-
-  /**
-   * Updates the progress bar used when loading the file pool.
-   * @param {Number} percentage - The percentage (0-100) of the progress bar.
-   */
-  _updateProgressBar (percentage) {
-    const center = this.screenCenter()
-
-    const xOuter = 200
-    const wOuter = 400
-    const hOuter = 20
-    const yOuter = center.y + 2 * hOuter
-
-    if (this._active === true) {
-      // Select the stage.
-      switch (percentage) {
-      case -1:
-        this._progressBarOuter = new Graphics()
-        this._progressBarOuter.lineStyle(1, 0xFFFFFF, 1)
-        this._progressBarOuter.drawRect(xOuter, yOuter, wOuter, hOuter)
-        this._progressBarOuter.x = 0
-        this._progressBarOuter.y = 0
-        this._progressBarInner = new Graphics()
-        this._progressBarInner.lineStyle(1, 0xFFFFFF, 1)
-        this._progressBarInner.drawRect(xOuter + 2, yOuter + 2, 1, hOuter - 4)
-        this._progressBarInner.x = 0
-        this._progressBarInner.y = 0
-        this._introScreen.addChild(this._progressBarInner)
-        this._introScreen.addChild(this._progressBarOuter)
-        this._runner._renderer.render(this._introScreen)
-        break
-      case 100:
-        this._introScreen.removeChild(this._progressBarInner)
-        this._introScreen.removeChild(this._progressBarOuter)
-        this._runner._renderer.render(this._introScreen)
-        break
-      default:
-        this._progressBarOuter.beginFill(0xFFFFFF)
-        this._progressBarOuter.drawRect(xOuter + 2, yOuter + 2, Math.round(percentage * (wOuter - 4)), hOuter - 4)
-        this._progressBarOuter.endFill()
-        this._runner._renderer.render(this._introScreen)
-      }
     }
   }
 

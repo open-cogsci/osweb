@@ -81,14 +81,7 @@ export default class Transfer {
    * @return {void}
    */
   async fetch (url) {
-    const response = await axios.get(url, {
-      responseType: 'blob',
-      onDownloadProgress: (event) => {
-        if (event.lengthComputable) {
-          this._runner._screen._updateProgressBar(event.loaded / event.total)
-        }
-      }
-    })
+    const response = await axios.get(url, { responseType: 'blob' })
     let res
     if (/Edge/.test(navigator.userAgent)) {
       res = new Blob([response.data])
@@ -108,11 +101,6 @@ export default class Transfer {
     if (contents.substr(0, 3) !== '---') {
       throw new Error('Specified script file is not valid OpenSesame script')
     }
-
-    // Disable the progressbar.
-    this._runner._screen._updateProgressBar(100)
-    // Set the script paramter.
-    // this._runner._script = contents
     return contents
   }
   
@@ -168,7 +156,6 @@ export default class Transfer {
    */
   async _readWebFonts () {
     // Update the introscreen
-    this._runner._screen._updateProgressBar(100)
     this._runner._screen._updateIntroScreen('Retrieving required webfonts.')
 
     return new Promise((resolve, reject) => {
