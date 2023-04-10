@@ -1,6 +1,4 @@
-import pako from 'pako'
 import isFunction from 'lodash/isFunction'
-import untar from 'js-untar'
 
 /**
  * FileStreamer makes it possible to asynchronously stream a file to another reader
@@ -49,30 +47,6 @@ class FileStreamer {
   getFileSize () {
     return this.file.size
   }
-}
-
-/**
- * Decompresses a cpmpressed experiment file
- *
- * @export
- * @param {File} zipfile The file to extract
- * @param {function} onProgress Function to be called during extraction progress. Receives proportion complete
- * @returns array of Files
- */
-export async function decompress (zipfile, onProgress) {
-  const fs = new FileStreamer(zipfile)
-  const inflator = new pako.Inflate()
-  let block
-
-  while (!fs.isEndOfFile()) {
-    block = await fs.readBlock()
-    inflator.push(block.data, fs.isEndOfFile())
-    if (inflator.err) {
-      throw inflator.msg
-    }
-    if (isFunction(onProgress)) onProgress(block.progress)
-  }
-  return untar(inflator.result.buffer)
 }
 
 /**

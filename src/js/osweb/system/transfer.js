@@ -1,9 +1,5 @@
 import WebFont from 'webfontloader'
-import {
-  decompress,
-  readFileAsText,
-  parseUrl
-} from '../util/files'
+import { readFileAsText, parseUrl } from '../util/files'
 import isString from 'lodash/isString'
 import isObject from 'lodash/isObject'
 import axios from 'axios'
@@ -15,27 +11,27 @@ export default class Transfer {
    * @param {Object} runner - The runner class to which the transfer belongs.
    */
   constructor (runner) {
-    // Create and set private properties.
-    this._runner = runner // Parent runner attached to the transfer object.
+    this._runner = runner
   }
 
   /**
-   * Read an osexp file.
-   * @param {Object|String} source - A file object or a String containing the experiment or a download URL.
+   * This is the top-level function that is called by the runner to load the
+   * experiment file, pool files included with the experiment file, pool files
+   * included as HTML elements, and web fonts.
+   * @param {Object|String} source - A file object or a String containing the 
+   *                                 experiment or a download URL.
    */
   async _readSource (source) {
     // Check type of object.
     if (!isString(source) && (!isObject(source) || source.constructor !== File)) {
       throw new Error('No osexp source file defined.')
     }
-
     // This var will hold the OS script after parsing
     let osScript
-
     if (source.constructor === File) {
       // Source is a local file.
       try {
-        osScript = await this._readOsexpFromFile(source)
+        osScript = await this._readExpFile(source)
       } catch (e) {
         throw new Error(`Could not read local osexp, ${e}`)
       }
@@ -47,7 +43,7 @@ export default class Transfer {
         // Attempt to download and load the remote experiment
         try {
           const remoteFile = await this.fetch(uri.href)
-          osScript = await this._readOsexpFromFile(remoteFile)
+          osScript = await this._readExpFile(remoteFile)
         } catch (e) {
           throw new Error(`Could not read remote osexp, ${e}`)
         }
@@ -59,9 +55,8 @@ export default class Transfer {
         }
       }
     }
-    // Read in and generate the webfonts
+    this._readPoolElements()
     await this._readWebFonts()
-
     return osScript
   }
 
@@ -77,39 +72,6 @@ export default class Transfer {
       osexp = await readFileAsText(osexp)
     }
     return this._processScript(osexp)
-  }
-
-  /**
-   * Reading and extracting an osexp file from a file location.
-   * @param {Object} file - A file object containing the experiment.
-   */
-  async _readOsexpFromFile (osexpFile) {
-    try {
-      return await this._readExpFile(osexpFile)
-    } catch (e) {
-      this._runner._debugger.addMessage(`Could not read osexp file as plain text: ${e.message}.\nFile is probably binary`)
-    }
-    // Reading and extracting an osexp file from a file location.
-    const files = await decompress(
-      osexpFile,
-      (progress) => this._runner._screen._updateProgressBar(progress)
-    )
-
-    // Find the script in the array of extracted files. Throw an error if it isn't found.
-    const expFileIndex = files.findIndex((item) => item.name === 'script.opensesame')
-    if (expFileIndex === -1) throw new Error('Could not locate experiment script')
-    // Pop the script out of the file array and proccess it
-    const expFile = files.splice(expFileIndex, 1)[0]
-    const script = await this._readExpFile(expFile.blob)
-
-    // According to the zlib convention followed by the pako library we use to decompress
-    // the osexp file, files have a type of 0, so filter these out.
-    const poolFiles = files.filter(
-      (item) => item.type === '0'
-    )
-    // Process the file pool items
-    await this._processOsexpPoolItems(poolFiles)
-    return script
   }
 
   /**
@@ -154,98 +116,48 @@ export default class Transfer {
     return contents
   }
   
-  /**
-   * Asynchronously iterate over file pool files and generate items for them.
+ /**
+   * If file-pool assets are included as HTML elements, they are added to the
+   * file pool here.
    *
-   * @param {array} poolFiles The array containing file pool files
-   * @returns void
+   * @returns Promise
    * @memberof Transfer
    */
-  async _processOsexpPoolItems (poolFiles) {
-    // Async iterator that handles each file in the poolFiles array
-    const asyncIterator = {
-      currentIndex: 0,
-      next () { // All the action happens here
-        const currentFile = poolFiles[this.currentIndex]
-
-        // If currentFile is undefined, then the array has been depleted and all
-        // files have been processed. This ends the async iteration properly
-        if (!currentFile) {
-          return {
-            value: undefined,
-            done: true
-          }
-        }
-
-        // Generate the item.
-        const item = {
-          data: null,
-          folder: currentFile.name.match(/(.*)[/\\]/)[1] || '',
-          name: currentFile.name.replace(/^.*[\\/]/, '').replace(
-            /U\+([0-9A-F]{4})/g, (whole, group1) => {
-              // Parse encoded characters back to their unicode counterparts
-              return String.fromCharCode(parseInt(group1, 16))
-            }
-          ),
-          ext: currentFile.name.substr(currentFile.name.lastIndexOf('.') + 1).toLowerCase(),
-          size: currentFile.size,
-          type: 'undefined'
-        }
-
-        if (['jpg', 'jpeg', 'png', 'bmp'].includes(item.ext)) {
-          // Create a new file pool mage item.
-          const img = new Image()
-          img.src = currentFile.getBlobUrl()
-          item.data = img
-          item.type = 'image'
-        } else if (['wav', 'ogg', 'mp3'].includes(item.ext)) {
-          item.data = new Audio()
-          item.type = 'audio'
-          // Safari gives a NotSupportedError when trying to play sound from
-          // a blob URL. As a workaround, here the blob is converted to a
-          // data URI. The data type is explicitly changed to audio, and the
-          // result is assigned to the audio source. See also:
-          // - <https://github.com/open-cogsci/osweb/issues/96>
-          let reader = new FileReader()
-          reader.onload = ((e) => {
-            item.data.src = e.target.result.replace(
-              'data:application/octet-stream', 'data:audio/' + item.ext)
-            }
-          )
-          reader.readAsDataURL(currentFile.blob)
-        } else if (['ogv', 'mp4', 'm4v'].includes(item.ext)) {
-          const ado = document.createElement('VIDEO')
-          ado.src = currentFile.getBlobUrl()
-          item.data = ado
-          item.type = 'video'
-        } else if (['csv','txt','md'].includes(item.ext)) {
-          item.type = 'text'
-          currentFile.blob.text().then(text => (item.data = text))
-        }
-        // Increment the counter.
-        this.currentIndex++
-
-        return {
-          value: item,
-          done: false
-        }
-      },
-      // for-await calls this on whatever it's passed, so
-      // iterators tend to return themselves.
-      [Symbol.asyncIterator] () {
-        return this
+  _readPoolElements () {
+    const filePool = document.getElementById('filePool')
+    if (filePool === null) {
+      console.log('file pool not embedded in HTML')
+      return
+    }
+    console.log('file pool embedded in HTML')
+    let item
+    for (const asset of filePool.children) {
+      item = {data: null, type: 'undefined'}
+      console.log(asset.id)
+      if (asset instanceof HTMLImageElement) {
+        console.log('image')
+        item.data = asset
+        item.type = 'image'
+      } else if (asset instanceof HTMLAudioElement) {
+        console.log('audio')
+        item.data = asset
+        item.type = 'audio'
+      } else if (asset instanceof HTMLVideoElement) {
+        console.log('video')
+        item.data = asset
+        item.type = 'video'
+      } else if (asset instanceof HTMLPreElement) {
+        console.log('text')
+        item.data = asset.innerText
+        item.type = 'text'
+      } else {
+        console.log(`unknown pool element: ${asset}`)
+        continue
       }
+      console.log('adding asset to file pool')
+      console.log(item)
+      this._runner._pool.add(item, asset.id)
     }
-
-    // Iterate over the file pool items
-    for await (const item of asyncIterator) {
-      // Add the item to the virtual pool.
-      this._runner._pool.add(item)
-
-      // Update the progress bar.
-      this._runner._screen._updateProgressBar(asyncIterator.currentIndex / poolFiles.length)
-    }
-    return true
   }
 
   /**
@@ -273,26 +185,5 @@ export default class Transfer {
         inactive: () => reject(new Error('Could not load webfonts'))
       })
     })
-  }
-
-  /**
-   * Writing experiment result data to a location.
-   * @param {String} target - An addres to store result data.
-   * @param {Object} resultData - The result data itself to store.
-   */
-  _writeDataFile (target, resultData) {
-    // Check if the target and resultData are defined.
-    if ((target !== null) && (resultData !== null)) {
-      // Add the data as a form element.
-      var data = new FormData()
-      data.append('data', resultData.toString())
-
-      // Create the request.
-      var xhr = new XMLHttpRequest()
-      xhr.open('post', target + '?file=subject-' + this._runner._experiment.vars.get('subject_nr'), true)
-
-      // Send the actual data.
-      return xhr.send(data)
-    }
   }
 }
