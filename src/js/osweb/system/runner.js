@@ -71,11 +71,16 @@ export default class Runner {
       this._container = (typeof content === 'string') ? document.getElementById(content) : content
 
       // Create and set the experiment canvas.
-      this._renderer = autoDetectRenderer(800, 600, {
-        antialias: true,
-        transparent: false,
-        resolution: 1
-      })
+      try {
+        this._renderer = autoDetectRenderer(800, 600, {
+          antialias: true,
+          transparent: false,
+          resolution: 1
+        })
+      } catch (error) {
+        document.getElementById('webgl-unavailable').style.display = 'block'
+        return
+      }
       this._renderer.backgroundColor = 0xFFFFFF;
 
       // Append the canvas to the container.
