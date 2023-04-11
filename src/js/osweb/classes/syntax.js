@@ -296,9 +296,27 @@ export default class Syntax {
    * @param {String} line - line the line to split in tokens
    * @return {Array} - The list of tokens
    */
-  split (line) {
-    var result = line.match(/(?:[^\s"]+|"[^"]*")+/g)
-    return (result !== null) ? result : []
+  split (s) {
+    // Double backslashes cause issues because they get confused with escaped
+    // quotes. That's why we replace them by a very unlikely string first,
+    // replace them back afterwards.
+    s = s.replaceAll('\\\\', '-/*/*-')
+    const regex = /(?:([^\s"']+)|(["'])(.*?[^\\])\2)+/g
+    const matches = s.matchAll(regex)
+    const result = []
+    for (const match of matches) {
+      let token = match[0]
+      // If the keyword ends with an =, then an empty string has been stripped
+      // off afterwards. We re-add it.
+      if (token.endsWith('='))
+        token += '""'
+      result.push(token.replaceAll('-/*/*-', '\\\\'))
+    }
+    // If the original string ends with a trailing empty string, then this has
+    // been stripped off. We add it here.
+    if (s.endsWith(' ""'))
+      result.push('""')
+    return result
   }
 
   /**

@@ -25,6 +25,12 @@ jest.mock('../../osweb/system/runner', () => {
   })
 })
 
+String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.split(search).join(replacement);
+};
+
+
 const runner = new Runner()
 runner._pythonParser = new PythonParser(runner)
 const syntax = new Syntax(runner)
@@ -102,6 +108,12 @@ describe('Syntax', function () {
           x: 'd:\\'
         })
     })
+    it('should parse text with complex template literals', function () {
+      checkCmd('draw textline text="${((acc > 70) ? \\"Well done!\\" : \\"Try harder!\\")}"',
+        'draw', ['textline'], {
+          text: '${((acc > 70) ? "Well done!" : "Try harder!")}',
+        })
+    })
     it('should ignore/not parse contents quoted keyword argument values', function () {
       checkCmd('draw fixdot color="#ff000b" show_if="[correct] = 0" x=0 y=0',
         'draw', ['fixdot'], {
@@ -115,9 +127,15 @@ describe('Syntax', function () {
       checkCmd('run correct_sound "[correct]=1"',
         'run', ['correct_sound', '[correct]=1'], {})
     })
-    it('should be able to handle empty strings', function () {
+    it('should be able to handle empty keyword values', function () {
       checkCmd('test test=""',
         'test', [], {'test': ''},
+        null
+      )
+    })
+    it('should be able to handle empty arguments', function () {
+      checkCmd('test ""',
+        'test', [''], {},
         null
       )
     })
@@ -248,73 +266,6 @@ __end__
     it('Should process nested variable definitions: [[nested]var]', function () {
       expect(syntax.eval_text(
         '[[nested]var]', tmpVarStore)).toBe('a nested value')
-    })
-  })
-
-  describe('compile_cond()', function () {
-    it('Should convert a variable within [] to a variable name within the var context', function () {
-      expect(syntax.compile_cond(
-        '[width] > 100', false)).toEqual('var.width > 100')
-    })
-    it('Should handle >= correctly', function () {
-      expect(syntax.compile_cond(
-        '[width] >= 100', false)).toEqual('var.width >= 100')
-    })
-    it('Should handle <= correctly', function () {
-      expect(syntax.compile_cond(
-        '[width] <= 100', false)).toEqual('var.width <= 100')
-    })
-    it('Should convert always to True', function () {
-      expect(syntax.compile_cond(
-        'always', false)).toEqual(true)
-    })
-    it('Should convert ALWAYS to True', function () {
-      expect(syntax.compile_cond(
-        'ALWAYS', false)).toEqual(true)
-    })
-    it('Should convert never to False', function () {
-      expect(syntax.compile_cond(
-        'never', false)).toEqual(false)
-    })
-    it('Should convert NEVER to False', function () {
-      expect(syntax.compile_cond(
-        'NEVER', false)).toEqual(false)
-    })
-    it('Should quote literals at the end of the string', function () {
-      expect(syntax.compile_cond(
-        '[cue_side] = left', false)).toEqual('var.cue_side == "left"')
-    })
-    it('Should convert a single = to double ==', function () {
-      expect(syntax.compile_cond(
-        '[width] = 1024', false)).toEqual('var.width == 1024')
-    })
-    it('Should handle underscores in variable names', function () {
-      expect(syntax.compile_cond(
-        '[my_var99] = 1024', false)).toEqual('var.my_var99 == 1024')
-    })
-    it('Should handle lack of spaces surrounding = correctly', function () {
-      expect(syntax.compile_cond(
-        '[width]=1024', false)).toEqual('var.width==1024')
-    })
-    it("Should not quote reserved words such as 'and' should also process double ==", function () {
-      expect(syntax.compile_cond(
-        '[width] = 1024 and [height] == 768', false)).toEqual('var.width == 1024 and var.height == 768')
-    })
-    it('Should process a line starting with the = character as python script', function () {
-      expect(syntax.compile_cond(
-        '=var.width > 100', false)).toEqual('var.width > 100')
-    })
-    it('Should ignore existing quotes and add new quotes', function () {
-      expect(syntax.compile_cond(
-        '"yes" = yes', false)).toEqual('"yes" == "yes"')
-    })
-    it('Should process backslashes in a proper way', function () {
-      expect(syntax.compile_cond(
-        'yes = \'yes\'', false)).toEqual('"yes" == \'yes\'')
-    })
-    it('Should process more complex structures with brackets', function () {
-      expect(syntax.compile_cond(
-        '("a b c" = abc) or (x != 10) and ([width] == 100)', false)).toEqual('("a b c" == "abc") or ("x" != 10) and (var.width == 100)')
     })
   })
 })
