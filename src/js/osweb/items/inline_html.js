@@ -27,6 +27,7 @@ export default class InlineHTML extends FormHTML {
       to_eval.push([start_pos, match.index])
       start_pos = match.index + match[0].length
     }
+    to_eval.push([start_pos, html.length])
     to_eval.reverse()
     for (let [start, end] of to_eval) {
       html = html.slice(0, start) + 
