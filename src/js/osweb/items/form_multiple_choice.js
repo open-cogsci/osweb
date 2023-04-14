@@ -25,13 +25,13 @@ export default class FormMultipleChoice extends FormHTML {
   }
 
   formElements () {
+    const boxType = (this.vars.get('allow_multiple') === 'no') ? 'radio' : 'checkbox'
     this._hasOkButton = (this.vars.get('advance_immediately') === 'no' || boxType === 'checkbox')
     const elements = []
     this._boxes = []
     // Create an array of non-empty options
     const options = String(this.vars.get('options')).split('\n').filter(
         option => option .trim().length > 0)
-    const boxType = (this.vars.get('allow_multiple') === 'no') ? 'radio' : 'checkbox'
     const elementHeight = 1 / (options.length + (this._hasOkButton ? 3 : 2))
     const title = this.element('h1', this.vars.get('form_title'), elementHeight, 1)
     elements.push(title)
