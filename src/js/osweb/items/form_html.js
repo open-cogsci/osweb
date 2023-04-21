@@ -85,7 +85,7 @@ export default class FormHTML extends Item {
   element (type, html, height, width=1, inherit=true) {
     const element = document.createElement(type)
     // Replace all newlines by <br> tags
-    if ((typeof html !== "undefined") && (html !== null)) element.innerHTML = html.replace(/\n/g, '<br>')
+    if ((typeof html !== "undefined") && (html !== null)) element.innerHTML = String(html).replace(/\n/g, '<br>')
     if (typeof height !== "undefined") element.style.height = this._paddedHeight * height - 40 + 'px'
     if (typeof width !== "undefined")element.style.width = this._paddedWidth * width - 40 + 'px'
     element.style.padding = '10px'
