@@ -36,6 +36,11 @@ export default class BaseElement {
    */
   from_string (script) {
     this.properties = this.sketchpad.syntax.parse_cmd(script)[2]
+    if (typeof this.properties['name'] === 'undefined') {
+      this.name = this.canvas.unique_name()
+    } else {
+      this.name = this.properties['name']
+    }
   }
 
   /**
@@ -96,5 +101,6 @@ export default class BaseElement {
   draw () {
     // Calculate the dynamic properties.
     this.eval_properties()
+    this.canvas.current_roi = this.name
   }
 }

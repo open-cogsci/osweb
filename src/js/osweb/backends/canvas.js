@@ -20,6 +20,8 @@ export default class Canvas {
     this._height = this.experiment._runner._renderer.height // Height of the HTML canvas used for drawing.
     this._styles = new Styles() // The style container.
     this._width = this.experiment._runner._renderer.width // Width of the HTML canvas used for drawing.
+    this._name_counter = 0 // Used to generate unique names
+    this.current_roi = null
     this._textures = []
   }
 
@@ -264,6 +266,7 @@ export default class Canvas {
       // Create the text element and get the dimension.
       var bounds = {}
       var textElement = new Text(htmlNode.textContent, textStyle)
+      textElement.roi = this.current_roi
       this._textures.push(textElement)
       textElement.getBounds(false, bounds)
 
@@ -334,6 +337,7 @@ export default class Canvas {
 
     // Create a circle element.
     var circle = new Graphics()
+    circle.roi = this.current_roi
     circle.lineStyle(elementStyle.penwidth, elementStyle.color, 1)
     if (elementStyle.fill === true) {
       circle.beginFill(elementStyle.color)
@@ -394,6 +398,7 @@ export default class Canvas {
 
     // Create an ellipse element.
     var ellipse = new Graphics()
+    ellipse.roi = this.current_roi
     ellipse.lineStyle(elementStyle.penwidth, elementStyle.color, 1)
     if (elementStyle.fill === true) {
       ellipse.beginFill(elementStyle.color)
@@ -549,6 +554,7 @@ export default class Canvas {
     const texture = Texture.from(canvas)
     this._textures.push(texture)
     var sprite = new Sprite(texture)
+    sprite.roi = this.current_roi
 
     // Position the image.
     sprite.x = x - (size / 2)
@@ -598,6 +604,7 @@ export default class Canvas {
     const texture = Texture.from(canvas)
     this._textures.push(texture)
     const sprite = new Sprite(texture)
+    sprite.roi = this.current_roi
     // sprite.anchor.set(.5)
     if (typeof scale !== 'undefined') {
       sprite.scale.x = scale
@@ -658,6 +665,7 @@ export default class Canvas {
 
     // Create a line element.
     var line = new Graphics()
+    line.roi = this.current_roi
     line.lineStyle(elementStyle.penwidth, elementStyle.color, 1)
     line.moveTo(0, 0)
     line.lineTo(ex - sx, ey - sy)
@@ -749,7 +757,7 @@ export default class Canvas {
     const texture = Texture.from(canvas)
     this._textures.push(texture)
     var sprite = new Sprite(texture)
-
+    sprite.roi = this.current_roi
     // Position the image.
     sprite.x = x - (size / 2)
     sprite.y = y - (size / 2)
@@ -778,6 +786,7 @@ export default class Canvas {
 
     // Create a polygon element.
     var polygon = new Graphics()
+    polygon.roi = this.current_roi
     polygon.lineStyle(elementStyle.penwidth, elementStyle.color, 1)
     if (elementStyle.fill === true) polygon.beginFill(elementStyle.color)
     polygon.drawPolygon(path)
@@ -803,6 +812,7 @@ export default class Canvas {
     var elementStyle = this._getStyle(styleArgs)
     // Create a rectangle element.
     var rectangle = new Graphics()
+    rectangle.roi = this.current_roi
     rectangle.lineStyle(elementStyle.penwidth, elementStyle.color, 1)
     if (elementStyle.fill === true) {
       rectangle.beginFill(elementStyle.color)
@@ -962,6 +972,7 @@ export default class Canvas {
         fill: elementStyle.color
       }
       var textElement = new Text(txt, textStyle)
+      textElement.roi = this.current_roi
       this._textures.push(textElement)
       if ([1, '1', true, 'yes'].indexOf(center) !== -1) {
         textElement.x = Math.floor(x - (textElement.width / 2))
@@ -976,5 +987,29 @@ export default class Canvas {
       this._container.addChild(textElement)
       
     }
+  }
+  
+  /** Used to assign unique names to nameless elements **/
+  unique_name () {
+    const name = 'stim' + this.unique_counter
+    this.unique_counter++
+    return name
+  }
+  
+  /** Returns a semi-colon separated string of rois that overlap with the
+    * specified x and y coordinates.
+    **/
+  elements_at (x, y) {
+    // Convert to top-left anchored coordinates
+    x += this.experiment.vars.get('width') / 2
+    y += this.experiment.vars.get('height') / 2
+    const elements = []
+    for (const child of this._container.children) {
+      if (typeof child.roi === 'undefined' | child.roi === null)
+        continue
+      if (child.getBounds().contains(x, y))
+        elements.push(child.roi)
+    }
+    return elements
   }
 }

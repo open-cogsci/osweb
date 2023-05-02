@@ -8,35 +8,24 @@ import Canvas from '../backends/canvas.js'
 export default class Sketchpad extends GenericResponse {
   constructor (experiment, name, script) {
     super(experiment, name, script)
-
-    // Create and set public properties.
     this.canvas = new Canvas(experiment, false)
     this.elements = []
-
-    // Process the script.
     this.from_string(script)
   }
 
   /**
-     * Sort function used for determining the draw index (z-index) of alle elemente.
-     * @param {Object} a - The first object to compare.
-     * @param {Object} b - The second object to compare.
-     * @return {Number} - The result of the comparison.
-     */
+    * Sort function used for determining the draw index (z-index) of alle elemente.
+    * @param {Object} a - The first object to compare.
+    * @param {Object} b - The second object to compare.
+    * @return {Number} - The result of the comparison.
+    */
   _compare (a, b) {
     // Sort function used for determining the draw index (z-index) of alle elemente.
     if (a.z_index() < b.z_index()) { return 1 } else if (a.z_index() > b.z_index()) { return -1 } else { return 0 }
   }
 
-  /** Implements the complete phase of the Sketchpad item. */
-  _complete () {
-    // Inherited.
-    super._complete()
-  }
-
   /** Resets all item variables to their default value. */
   reset () {
-    // Resets all item variables to their default value.
     this.elements = []
     this.vars.set('duration', 'keypress')
   }
@@ -47,11 +36,10 @@ export default class Sketchpad extends GenericResponse {
   }
 
   /**
-     * Parse a definition string and retrieve all properties of the item.
-     * @param {String} script - The script containing the properties of the item.
-     */
+    * Parse a definition string and retrieve all properties of the item.
+    * @param {String} script - The script containing the properties of the item.
+    */
   from_string (script) {
-    // Define and reset variables to their defaults.
     this.variables = {}
     this.comments = []
     this.reset()
@@ -89,25 +77,18 @@ export default class Sketchpad extends GenericResponse {
 
   /** Implements the prepare phase of an item. */
   prepare () {
-    // Clear the canvas.
     this.canvas.clear()
-
-    // Draw the elements.
     for (let i = 0; i < this.elements.length; i++) {
       if (this.elements[i].is_shown() === true) {
         this.elements[i].draw()
       }
     }
-
-    // Inherited.
     super.prepare()
   }
 
   /** Implements the run phase of the Sketschpad. */
   run () {
-    // Inherited.
     super.run()
-
     this._set_bg_color()
     // Set the onset and start the stimulus response process.
     this.set_item_onset(this.canvas.show())

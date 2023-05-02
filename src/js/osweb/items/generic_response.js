@@ -221,10 +221,11 @@ export default class GenericResponse extends Item {
   process_response_mouseclick (retval) {
     this.experiment._start_response_interval = this.sri
     this.experiment._end_response_interval = retval.rtTime
-    this.experiment.vars.response = retval.resp
+    this.experiment.vars.set('response', retval.resp)
     this.synonyms = this._mouse._synonyms(this.experiment.vars.response)
     this.set_mouse_coordinates(retval.event.clientX, retval.event.clientY)
     this.response_bookkeeping()
+    this.cursor_roi_bookkeeping()
   }
 
   /** Process a time out response. */
@@ -234,6 +235,20 @@ export default class GenericResponse extends Item {
     this.experiment.vars.set('response', 'None')
     this.synonyms = ['None', 'none']
     this.response_bookkeeping()
+  }
+  
+  /** Processes roi for the linked-sketchad functionality of the mouse **/
+  cursor_roi_bookkeeping () {
+    const linked_sketchpad = this.experiment.items._items[
+        this.vars.get('linked_sketchpad')]
+    if (typeof linked_sketchpad === 'undefined') {
+      this.experiment.vars.set('cursor_roi', 'undefined')
+      return
+    }
+    this.experiment.vars.set('cursor_roi', linked_sketchpad.canvas.elements_at(
+      this.experiment.vars.get('cursor_x'),
+      this.experiment.vars.get('cursor_y')
+    ).join(';'))
   }
 
   /** General response logging after a stimulus/response. */

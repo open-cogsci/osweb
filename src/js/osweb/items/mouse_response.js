@@ -45,6 +45,7 @@ export default class MouseResponse extends GenericResponse {
     this.vars.set('flush', 'yes')
     this.vars.set('show_cursor', 'yes')
     this.vars.set('timeout', 'infinite')
+    this.vars.set('linked_sketchpad', '')
   }
 
   prepare () {
