@@ -39,7 +39,7 @@ export default class BaseElement {
     if (typeof this.properties['name'] === 'undefined') {
       this.name = this.canvas.unique_name()
     } else {
-      this.name = this.properties['name']
+      this.name = this.syntax.eval_text(this.properties['name'])
     }
   }
 
