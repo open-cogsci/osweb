@@ -37,9 +37,9 @@ export default class BaseElement {
   from_string (script) {
     this.properties = this.sketchpad.syntax.parse_cmd(script)[2]
     if (typeof this.properties['name'] === 'undefined') {
-      this.name = this.canvas.unique_name()
+      this._name = this.canvas.unique_name()
     } else {
-      this.name = this.syntax.eval_text(this.properties['name'])
+      this.name = this.properties['name']
     }
   }
 
@@ -62,7 +62,6 @@ export default class BaseElement {
     // Evaluates all properties and return them.
     const xc = this.experiment.vars.get('width') / 2
     const yc = this.experiment.vars.get('height') / 2
-
     this._properties = Object.entries(this.properties).reduce((result, [prop, val]) => {
       let value = this.syntax.eval_text(val, this.vars, false)
 
@@ -101,6 +100,6 @@ export default class BaseElement {
   draw () {
     // Calculate the dynamic properties.
     this.eval_properties()
-    this.canvas.current_roi = this.name
+    this.canvas.current_roi = this.syntax.eval_text(this.name)
   }
 }
