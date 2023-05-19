@@ -991,8 +991,8 @@ export default class Canvas {
   
   /** Used to assign unique names to nameless elements **/
   unique_name () {
-    const name = 'stim' + this.unique_counter
-    this.unique_counter++
+    const name = 'stim' + this._name_counter
+    this._name_counter++
     return name
   }
   

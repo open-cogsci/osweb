@@ -37,7 +37,7 @@ export default class BaseElement {
   from_string (script) {
     this.properties = this.sketchpad.syntax.parse_cmd(script)[2]
     if (typeof this.properties['name'] === 'undefined') {
-      this._name = this.canvas.unique_name()
+      this.name = this.canvas.unique_name()
     } else {
       this.name = this.properties['name']
     }
