@@ -169,7 +169,10 @@ export default class Transfer {
           ]
         },
         active: () => resolve(),
-        inactive: () => reject(new Error('Could not load webfonts'))
+        inactive: () => {
+          console.warn('Could not load webfonts')
+          resolve(false)
+        }
       })
     })
   }
