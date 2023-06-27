@@ -119,40 +119,35 @@ Never provide personal or sensitive information
            Click or touch the screen to begin!`
       }
       this._updateIntroScreen(text)
-
-      // Setup the mouse click response handler.
-      var clickHandler = function (event) {
-        // Briefly play each of the samples from the file pool. This is
-        // necessary in Safari so that the first happens as a direct 
-        // consequence of a user interaction.
-        for (let item of this._runner._experiment.pool._items) {
+      // We preload each audio stimulus by briefly playing it. This seems
+      // required on Safari. We use a callback to insert a brief delay between
+      // each preload. When all stimuli have been preloaded, we continue with
+      // initializing the experiment.
+      let preloadStimuli = function (event) {
+        if (this._preloadQueue.length > 0) {
+          let item = this._preloadQueue.pop()
           if (item.type === 'audio') {
+            console.log('silently playing audio file for preloading')
             item.data.volume = 0
-            item.data.play()
+            item.data.play().catch(
+              error => console.error('Failed to play audio:', error))
             item.data.pause()
             item.data.currentTime = 0
             item.data.volume = 1
           }
+          setTimeout(preloadStimuli, 10)
+        } else {
+          this._runner._renderer.view.removeEventListener('click', preloadStimuli)
+          this._runner._renderer.view.removeEventListener('touchstart', preloadStimuli)
+          this._clearIntroScreen()
+          this._runner._initialize()
         }
-        // Remove the handler.
-        this._runner._renderer.view.removeEventListener('click', clickHandler)
-        this._runner._renderer.view.removeEventListener('touchstart', clickHandler)
-
-        // Finalize the introscreen elements.
-        this._clearIntroScreen()
-
-        // Start the task.
-        this._runner._initialize()
       }.bind(this)
-
-      // Set the temporary mouse click.
-      this._runner._renderer.view.addEventListener('click', clickHandler, false)
-      this._runner._renderer.view.addEventListener('touchstart', clickHandler, false)
+      this._preloadQueue = this._runner._experiment.pool._items.slice()
+      this._runner._renderer.view.addEventListener('click', preloadStimuli, false)
+      this._runner._renderer.view.addEventListener('touchstart', preloadStimuli, false)
     } else {
-      // Finalize the introscreen elements.
       this._clearIntroScreen()
-
-      // Start the runner.
       this._runner._initialize()
     }
   }

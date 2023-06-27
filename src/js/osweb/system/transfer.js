@@ -117,33 +117,26 @@ export default class Transfer {
       console.log('file pool not embedded in HTML')
       return
     }
-    console.log('file pool embedded in HTML')
+    console.log(`file pool embedded in HTML (${filePool.children.length} files)`)
     let item
     for (const asset of filePool.children) {
       item = {data: null, type: 'undefined'}
-      console.log(asset.id)
       if (asset instanceof HTMLImageElement) {
-        console.log('image')
         item.data = asset
         item.type = 'image'
       } else if (asset instanceof HTMLAudioElement) {
-        console.log('audio')
         item.data = asset
         item.type = 'audio'
       } else if (asset instanceof HTMLVideoElement) {
-        console.log('video')
         item.data = asset
         item.type = 'video'
       } else if (asset instanceof HTMLPreElement) {
-        console.log('text')
         item.data = asset.innerText
         item.type = 'text'
       } else {
         console.log(`unknown pool element: ${asset}`)
         continue
       }
-      console.log('adding asset to file pool')
-      console.log(item)
       this._runner._pool.add(item, asset.id)
     }
   }
