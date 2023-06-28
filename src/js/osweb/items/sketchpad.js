@@ -28,6 +28,7 @@ export default class Sketchpad extends GenericResponse {
   reset () {
     this.elements = []
     this.vars.set('duration', 'keypress')
+    this.vars.set('linked_sketchpad', '')
   }
 
   /** Process a time out response. */
