@@ -59,8 +59,10 @@ export default class Syntax {
     if (isObject(text)) return this._runner._pythonParser._run_statement(text)
     // if pTxt is already a number simply return it
     if (isNumber(text)) return text
-    // Try to convert text to a number. If this succeeds return it.
-    if ((text !== '') && !isNaN(toNumber(text))) return toNumber(text)
+    // Try to convert text to a number. If this succeeds return it. Don't do 
+    // this for strings that are either empty or contain only whitespace, to
+    // avoid them from being converted to 0.
+    if ((text.trim().length !== 0) && !isNaN(toNumber(text))) return toNumber(text)
     // Check if the text contains template literals. If so, we evaluate these.
     // This is the preferred syntax.
     if (text.includes('${'))
