@@ -133,6 +133,7 @@ export default class Styles {
    */
   set background_color (val) {
     this._background_color = this._convertColorValue(val, 'number')
+    this._background_color_rgb = val
   }
 
   /**

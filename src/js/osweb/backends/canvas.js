@@ -857,14 +857,13 @@ export default class Canvas {
     this._container.scale.x = this.experiment._scale_x
     this._container.scale.y = this.experiment._scale_y
 
-    // Set renderer background and render the content.
+    // Set renderer background and render the content. Because PixiJS users
+    // numerical values for colors, whereas the body uses regular CSS colors,
+    // we need to assign two different values for each. Color conversion is
+    // done inside the style object.
     this.experiment._runner._renderer.backgroundColor = this._styles._background_color
-    try {
-      const c = this._styles.rgb
-      document.body.style.backgroundColor = `rgb(${c.r},${c.g},${c.b})`
-    } catch (e) {
-      console.error(e)
-    }
+    if (this.experiment._runner._fullBackgroundColor)
+      document.body.style.backgroundColor = this._styles._background_color_rgb
     this.experiment._runner._renderer.render(this._container)
     return (experiment != null ? experiment.clock.time() : null)
   }

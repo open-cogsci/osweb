@@ -105,6 +105,7 @@ export default class Runner {
         confirm: this._confirm = null,
         debug: this._debugger.enabled = false,
         fullScreen: this._fullScreen = false,
+        fullBackgroundColor: this._fullBackgroundColor = false,
         introClick: this._screen._click = true,
         introScreen: this._screen._active = true,
         mimetype: this._mimetype = null,
