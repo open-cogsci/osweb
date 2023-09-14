@@ -31,9 +31,9 @@ export default class Session {
         version: navigator.appVersion
       },
       date: {
-        startdate: ('0' + this._date.getDate()).slice(-2) + '-' + ('0' + this._date.getMonth()).slice(-2) + '-' + ('0' + this._date.getFullYear()).slice(-2),
+        startdate: ('0' + this._date.getDate()).slice(-2) + '-' + ('0' + (1 + this._date.getMonth())).slice(-2) + '-' + ('0' + this._date.getFullYear()).slice(-2),
         starttime: ('0' + this._date.getHours()).slice(-2) + ':' + ('0' + this._date.getMinutes()).slice(-2) + ':' + ('0' + this._date.getSeconds()).slice(-2),
-        startdateUTC: ('0' + this._date.getUTCDate()).slice(-2) + '-' + ('0' + this._date.getUTCMonth()).slice(-2) + '-' + ('0' + this._date.getUTCFullYear()).slice(-2)
+        startdateUTC: ('0' + this._date.getUTCDate()).slice(-2) + '-' + ('0' + (1 + this._date.getUTCMonth())).slice(-2) + '-' + ('0' + this._date.getUTCFullYear()).slice(-2)
       },
       experiment: {
         debug: 0,
