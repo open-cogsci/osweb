@@ -316,6 +316,7 @@ export default class Events {
      * @param {Object} event - sound end event.
      */
   _audioEnded (sampler) {
+    sampler.clearFilters()
     // If duration isequal to sound exit the sound item.
     if (sampler.duration === 'sound') {
       this.proceed()

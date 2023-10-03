@@ -23,7 +23,6 @@ export default class SamplerBackend {
    * @param {Boolean} block - If true use the sound ad a block wave.
    */
   constructor (experiment, source, volume, pitch, pan, duration, fade, block) {
-    // Create and set public properties.
     this.block = (typeof block === 'undefined') ? false : block
     this.duration = (typeof duration === 'undefined') ? 'sound' : duration
     this.experiment = experiment
@@ -38,7 +37,6 @@ export default class SamplerBackend {
       throw e
     }
     this.sample.onended = () => this.experiment._runner._events._audioEnded(this)
-
     if (audioCtx) {
       // We can only connect a sample to an audio context once
       if (typeof source.mediaElementSource === 'undefined')
@@ -83,9 +81,14 @@ export default class SamplerBackend {
     // Set the blocking of the sound.
     this.experiment._runner._events._run(this, -1, constants.RESPONSE_SOUND, [])
   }
+  
+  clearFilters () {
+    // Disconnect audio nodes so that they don't accumulate
+    this.nodes.forEach(node => node.disconnect())
+  }
 
   applyFilters () {
-    const nodes = [audioCtx.destination]
+    this.nodes = [audioCtx.destination]
     // Set volume
     const gainNode = new GainNode(audioCtx)
     gainNode.gain.setValueAtTime(this.volume, audioCtx.currentTime)
@@ -93,7 +96,7 @@ export default class SamplerBackend {
       gainNode.gain.setValueAtTime(0, audioCtx.currentTime)
       gainNode.gain.linearRampToValueAtTime(this.volume, audioCtx.currentTime + this.fade / 1000)
     }
-    nodes.unshift(gainNode)
+    this.nodes.unshift(gainNode)
     // Set panning
     if (this.pan) {
       let pan
@@ -104,17 +107,17 @@ export default class SamplerBackend {
       else
         pan = this.pan
       try {
-        nodes.unshift(new StereoPannerNode(audioCtx, { pan: pan }))
+        this.nodes.unshift(new StereoPannerNode(audioCtx, { pan: pan }))
       } catch (e) {
         console.warn('Unable to apply panning', e)
       }
     }
     // Connect the filters creating a chain
-    for (let i = 0; i < nodes.length; i++) {
-      if (nodes[i] !== audioCtx.destination) {
-        nodes[i].connect(nodes[i + 1])
+    for (let i = 0; i < this.nodes.length; i++) {
+      if (this.nodes[i] !== audioCtx.destination) {
+        this.nodes[i].connect(this.nodes[i + 1])
       }
     }
-    return nodes.shift(0)
+    return this.nodes[0]
   }
 }
