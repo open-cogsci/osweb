@@ -38,6 +38,7 @@ export default class Sampler extends GenericResponse {
     this.vars.set('stop_after', 0)
     this.vars.set('volume', 1)
     this.vars.set('duration', 'sound')
+    this.vars.set('linked_sketchpad', '')
   }
 
   /** Implements the prepare phase of an item. */
