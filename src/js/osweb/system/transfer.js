@@ -1,4 +1,5 @@
 import WebFont from 'webfontloader'
+import { getAudioContext } from './audio_context'
 import { readFileAsText, parseUrl } from '../util/files'
 import isString from 'lodash/isString'
 import isObject from 'lodash/isObject'
@@ -55,7 +56,7 @@ export default class Transfer {
         }
       }
     }
-    this._readPoolElements()
+    await this._readPoolElements()
     await this._readWebFonts()
     return osScript
   }
@@ -104,42 +105,85 @@ export default class Transfer {
     return contents
   }
   
- /**
+  /**
    * If file-pool assets are included as HTML elements, they are added to the
    * file pool here.
    *
    * @returns Promise
    * @memberof Transfer
    */
-  _readPoolElements () {
-    const filePool = document.getElementById('filePool')
-    if (filePool === null) {
-      console.log('file pool not embedded in HTML')
-      return
-    }
-    console.log(`file pool embedded in HTML (${filePool.children.length} files)`)
-    let item
-    for (const asset of filePool.children) {
-      item = {data: null, type: 'undefined'}
-      if (asset instanceof HTMLImageElement) {
-        item.data = asset
-        item.type = 'image'
-      } else if (asset instanceof HTMLAudioElement) {
-        item.data = asset
-        item.type = 'audio'
-      } else if (asset instanceof HTMLVideoElement) {
-        item.data = asset
-        item.type = 'video'
-      } else if (asset instanceof HTMLPreElement) {
-        item.data = asset.innerText
-        item.type = 'text'
-      } else {
-        console.log(`unknown pool element: ${asset}`)
-        continue
+  async _readPoolElements() {
+      const filePool = document.getElementById('filePool')
+      if (filePool === null) {
+          console.log('file pool not embedded in HTML')
+          return
       }
-      this._runner._pool.add(item, asset.id)
-    }
+      console.log(`file pool embedded in HTML (${filePool.children.length} files)`)
+      const audioContext = getAudioContext()
+      let audioPromises = []
+      for (const asset of filePool.children) {
+          if (asset instanceof HTMLImageElement) {
+              this._runner._pool.add({ data: asset, type: 'image' }, asset.id)
+          } else if (asset instanceof HTMLAudioElement 
+                     || (asset instanceof HTMLSpanElement && asset.className === 'audioFile')) {
+            // Audio can be embedded either as the text content of a `<span>`
+            // element or the source of an `<audio><source></src>` element.
+            // By default, spans are used because too many audio elements 
+            // breaks on iOS. In all cases, audio is read into a buffer for
+            // later playback through the WebAudio API.
+            let audioSrc = asset instanceof HTMLAudioElement ? asset.querySelector('source').src : asset.textContent;
+            let promise = new Promise((resolve, reject) => {
+                if (audioSrc.startsWith('data:')) {
+                    // Handle Base64 encoded data
+                    const base64String = audioSrc.split(',')[1];
+                    const audioData = atob(base64String);
+                    const audioArray = new Uint8Array(audioData.length);
+                    for (let i = 0; i < audioData.length; i++) {
+                        audioArray[i] = audioData.charCodeAt(i);
+                    }
+                    const audioBuffer = new ArrayBuffer(audioArray.length);
+                    const bufferView = new Uint8Array(audioBuffer);
+                    bufferView.set(audioArray);
+                    audioContext.decodeAudioData(audioBuffer, function (buffer) {
+                        this._runner._pool.add({ data: buffer, type: 'audioBuffer' }, asset.id)
+                        resolve();
+                    }.bind(this), function (error) {
+                        console.error('Error decoding audio:', error);
+                        reject(error);
+                    });
+                } else {
+                    // Handle audio file from a URI
+                    let request = new XMLHttpRequest();
+                    request.open('GET', audioSrc, true);
+                    request.responseType = 'arraybuffer';
+                    request.onload = function () {
+                        audioContext.decodeAudioData(request.response, function (buffer) {
+                            this._runner._pool.add({ data: buffer, type: 'audioBuffer' }, asset.id)
+                            resolve();
+                        }.bind(this), function (error) {
+                            console.error('Error decoding audio:', error);
+                            reject(error);
+                        });
+                    }.bind(this);
+                    request.send();
+                }
+            });
+            audioPromises.push(promise);
+          } else if (asset instanceof HTMLVideoElement) {
+              this._runner._pool.add({ data: asset, type: 'video' }, asset.id)
+          } else if (asset instanceof HTMLPreElement) {
+              this._runner._pool.add({ data: asset.innerText, type: 'text' }, asset.id)
+          } else {
+              console.log(`unknown pool element: ${asset}`)
+              continue
+          }
+  
+          
+      }
+      await Promise.all(audioPromises)
+      console.log("all audio files have been loaded and decoded")
   }
+  
 
   /**
    * Read in webfonts

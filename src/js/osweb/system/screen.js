@@ -1,6 +1,7 @@
 import { isFunction } from 'lodash'
 import { Container, Sprite, Graphics, Text } from 'pixi.js'
 import { VERSION_NUMBER } from '../index.js'
+import { getAudioContext } from './audio_context'
 
 /** Class representing a Screen. */
 export default class Screen {
@@ -119,30 +120,43 @@ Never provide personal or sensitive information
            Click or touch the screen to begin!`
       }
       this._updateIntroScreen(text)
-      // We preload each audio stimulus by briefly playing it. This seems
-      // required on Safari. We use a callback to insert a brief delay between
-      // each preload. When all stimuli have been preloaded, we continue with
-      // initializing the experiment.
-      let preloadStimuli = function (event) {
+      // We preload each audio stimulus by briefly and silently playing it.
+      // This is required on Safari and iOS. When all stimuli have been 
+      // started, we continue with initializing the experiment.
+      let preloadStimuli = function(event) {
         if (this._preloadQueue.length > 0) {
-          let item = this._preloadQueue.pop()
-          if (item.type === 'audio') {
-            console.log('silently playing audio file for preloading')
-            item.data.volume = 0
-            item.data.play().catch(
-              error => console.error('Failed to play audio:', error))
-            item.data.pause()
-            item.data.currentTime = 0
-            item.data.volume = 1
+          console.log(`silently playing ${this._preloadQueue.length} audio samples`)
+          let promises = []
+          while (this._preloadQueue.length > 0) {
+            let item = this._preloadQueue.pop()
+            if (item.type === 'audioBuffer') {
+              console.log('silently playing audio buffer for preloading')
+              const source = this._audioContext.createBufferSource()
+              source.buffer = item.data
+              // Create a Gain Node to mute the audio
+              const gainNode = this._audioContext.createGain()
+              gainNode.gain.setValueAtTime(0, this._audioContext.currentTime)
+              source.connect(gainNode).connect(this._audioContext.destination)
+              // Create a promise to be resolved when this buffer starts playing
+              promises.push(new Promise((resolve) => {
+                source.onended = resolve
+              }));
+              // Start and stop playing the audio buffer almost immediately
+              source.start(0)
+              source.stop(0 + 0.001)
+            }
           }
-          setTimeout(preloadStimuli, 10)
-        } else {
-          this._runner._renderer.view.removeEventListener('click', preloadStimuli)
-          this._runner._renderer.view.removeEventListener('touchstart', preloadStimuli)
-          this._clearIntroScreen()
-          this._runner._initialize()
+          // Wait for all audio to finish playing, then proceed
+          Promise.all(promises).then(() => {
+            console.log('finished silent playback')
+            this._runner._renderer.view.removeEventListener('click', preloadStimuli)
+            this._runner._renderer.view.removeEventListener('touchstart', preloadStimuli)
+            this._clearIntroScreen()
+            this._runner._initialize()
+          });
         }
-      }.bind(this)
+      }.bind(this);
+      this._audioContext = getAudioContext()
       this._preloadQueue = this._runner._experiment.pool._items.slice()
       this._runner._renderer.view.addEventListener('click', preloadStimuli, false)
       this._runner._renderer.view.addEventListener('touchstart', preloadStimuli, false)
