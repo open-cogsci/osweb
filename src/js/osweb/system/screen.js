@@ -124,6 +124,13 @@ Never provide personal or sensitive information
       // This is required on Safari and iOS. When all stimuli have been 
       // started, we continue with initializing the experiment.
       let preloadStimuli = function(event) {
+        let continueAfterPreload = function() {
+          console.log('finished silent playback')
+          this._runner._renderer.view.removeEventListener('click', preloadStimuli)
+          this._runner._renderer.view.removeEventListener('touchstart', preloadStimuli)
+          this._clearIntroScreen()
+          this._runner._initialize()
+        }.bind(this)
         if (this._preloadQueue.length > 0) {
           console.log(`silently playing ${this._preloadQueue.length} audio samples`)
           let promises = []
@@ -145,15 +152,11 @@ Never provide personal or sensitive information
               source.start(0)
               source.stop(0 + 0.001)
             }
-          }
+          } 
           // Wait for all audio to finish playing, then proceed
-          Promise.all(promises).then(() => {
-            console.log('finished silent playback')
-            this._runner._renderer.view.removeEventListener('click', preloadStimuli)
-            this._runner._renderer.view.removeEventListener('touchstart', preloadStimuli)
-            this._clearIntroScreen()
-            this._runner._initialize()
-          });
+          Promise.all(promises).then(continueAfterPreload)
+        } else {
+          continueAfterPreload()
         }
       }.bind(this);
       this._audioContext = getAudioContext()
