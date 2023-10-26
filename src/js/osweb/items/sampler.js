@@ -43,25 +43,15 @@ export default class Sampler extends GenericResponse {
 
   /** Implements the prepare phase of an item. */
   prepare () {
-    // Create the sample
     const sample = this.vars.get('sample')
-    if (sample !== '') {
-      // Retrieve the content from the file pool.
-      this._sample = this._runner._pool[sample]
-      if (typeof (this._sample) === 'undefined')
-        this.experiment._runner._debugger.addError(`"${sample}" does not exist in the file pool`)
-      this._sampler = new SamplerBackend(this.experiment, this._sample)
-      this._sampler.volume = this.vars.get("volume")
-      this._sampler.duration = this.vars.get("duration")
-      this._sampler.fade = this.vars.get("fade_in")
-      this._sampler.pan = this.vars.get("pan")
-      this._sampler.pitch = this.vars.get("pitch")
-    } else {
-      // Show error message.
-      this._runner._debugger.addError(`No sample has been specified in sampler: ${sample}`)
-    }
-
-    // Inherited.
+    if (sample === '') 
+      throw `No sample has been specified in sampler: ${sample}`
+    this._sample = this._runner._pool[sample]
+    if (typeof (this._sample) === 'undefined')
+      this.experiment._runner._debugger.addError(`"${sample}" does not exist in the file pool`)
+    this._sampler = new SamplerBackend(this.experiment, this._sample,
+      this.vars.get("volume"), this.vars.get("pitch"), this.vars.get("pan"),
+      this.vars.get("duration"), this.vars.get("fade_in"))
     super.prepare()
   }
 

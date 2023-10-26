@@ -17,6 +17,7 @@ export default class SamplerBackend {
    * @param {Boolean} block - If true use the sound ad a block wave.
    */
   constructor (experiment, source, volume, pitch, pan, duration, fade, block) {
+    this.source = null
     this.block = (typeof block === 'undefined') ? false : block
     this.duration = (typeof duration === 'undefined') ? 'sound' : duration
     this.experiment = experiment
@@ -31,14 +32,15 @@ export default class SamplerBackend {
       throw e
     }
     this.audioContext = getAudioContext()
+    this.initBufferSource()
+  }
+  
+  initBufferSource () {
+    // Initializes the buffer source
     this.source = this.audioContext.createBufferSource()
     this.source.buffer = this.audioBuffer
     this.source.onended = () => this.experiment._runner._events._audioEnded(this)
-    // this.sample.onended = () => this.experiment._runner._events._audioEnded(this)
-    // // We can only connect a sample to an audio context once
-    // if (typeof source.mediaElementSource === 'undefined')
-    //   source.mediaElementSource = this.audioContext.createMediaElementSource(this.sample)
-    // this.source = source.mediaElementSource
+    this.source.connect(this.applyFilters())
   }
   
   /**
@@ -58,18 +60,10 @@ export default class SamplerBackend {
     this.pitch = typeof pitch === 'undefined' ? this.pitch : pitch
     this.pan = typeof pan === 'undefined' ? this.pan : pan
     this.fade = typeof fade === 'undefined' ? this.fade : fade
-
-    this.source.connect(this.applyFilters())
+    if (this.source === null)
+        this.initBufferSource()
     this.source.start(0)
-    // if (this.audioContext) {
-    //   if (this.audioContext.state === 'suspended') this.audioContext.resume()
-    //   this.source.connect(this.applyFilters())
-    // } else {
-    //   this.source.volume = this.volume
-    // }
-    // this.sample.preservesPitch = false
-    // this.sample.playbackRate = this.pitch
-    // this.sample.play()
+    this.source = null
   }
 
   /** Set the blocking of the sound (wait period). */
@@ -85,6 +79,10 @@ export default class SamplerBackend {
 
   applyFilters () {
     this.nodes = [this.audioContext.destination]
+    // Set pitch
+    if (this.pitch !== undefined && this.pitch !== 1) {
+      this.source.playbackRate.setValueAtTime(this.pitch, this.audioContext.currentTime)
+    }
     // Set volume
     const gainNode = new GainNode(this.audioContext)
     gainNode.gain.setValueAtTime(this.volume, this.audioContext.currentTime)
@@ -102,11 +100,7 @@ export default class SamplerBackend {
         pan = 1
       else
         pan = this.pan
-      try {
-        this.nodes.unshift(new StereoPannerNode(this.audioContext, { pan: pan }))
-      } catch (e) {
-        console.warn('Unable to apply panning', e)
-      }
+      this.nodes.unshift(new StereoPannerNode(this.audioContext, { pan: pan }))
     }
     // Connect the filters creating a chain
     for (let i = 0; i < this.nodes.length; i++) {
