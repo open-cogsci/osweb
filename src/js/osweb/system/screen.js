@@ -109,34 +109,36 @@ export default class Screen {
 
   /** Check if the experiment must be clicked to start. */
   _setupClickScreen (text) {
-    // Check if the experiment must be clicked to start.
-    if (this._click === true) {
-      // Update inroscreen.
-      if ((typeof text === "undefined") || (text.length === 0)) {
-        text = `
-Never provide personal or sensitive information
-    such as credit card numbers or PIN codes
-
-           Click or touch the screen to begin!`
-      }
-      this._updateIntroScreen(text)
-      // We preload each audio stimulus by briefly and silently playing it.
-      // This is required on Safari and iOS. When all stimuli have been 
-      // started, we continue with initializing the experiment.
-      let preloadStimuli = function(event) {
-        this._audioContext = getAudioContext()
-        let continueAfterPreload = function() {
-          if (this._audioContext === null) {
-            console.log('already finished silent playback, ignoring')
-            return
-          }
-          this._audioContext = null
-          console.log('finished silent playback')
-          this._runner._renderer.view.removeEventListener('click', preloadStimuli)
-          this._runner._renderer.view.removeEventListener('touchstart', preloadStimuli)
-          this._clearIntroScreen()
-          this._runner._initialize()
-        }.bind(this)
+    // If no user interaction is required to start the experiment, we continue
+    // straight away
+    if (this._click === false) {
+      this._clearIntroScreen()
+      this._runner._initialize()
+      return
+    }
+    // Otherwise we require the user to touch/ click the screen, in response
+    // to which all audio files are preloaded before the experiment actually
+    // launches. This implemented in a series of callbacks below.
+    //
+    // Once all audio samples have been preloaded, we continue with the
+    // experiment.
+    let preloadStimuli = function(event) {
+      let continueAfterPreload = function() {
+        if (this._audioContext === null) {
+          console.log('already finished silent playback, ignoring')
+          return
+        }
+        this._audioContext = null
+        console.log('finished silent playback')
+        this._runner._renderer.view.removeEventListener('click', preloadStimuli)
+        this._runner._renderer.view.removeEventListener('touchstart', preloadStimuli)
+        this._clearIntroScreen()
+        this._runner._initialize()
+      }.bind(this)
+      // Once the audio context is running, this function silently and 
+      // briefly plays all audio samples so that they can be played back
+      // without a user interaction later on.
+      let withRunningAudioContext = function() {
         if (this._preloadQueue.length > 0) {
           console.log(`silently playing ${this._preloadQueue.length} audio samples`)
           let promises = []
@@ -160,18 +162,46 @@ Never provide personal or sensitive information
             }
           } 
           // Wait for all audio to finish playing, then proceed
-          Promise.all(promises).then(continueAfterPreload)
+          Promise.all(promises)
+            .then(continueAfterPreload)
+            .catch((error) => {
+              console.log('failed to preload some or all audio buffers: ' + error)
+            })
         } else {
           continueAfterPreload()
         }
-      }.bind(this);
-      this._preloadQueue = this._runner._experiment.pool._items.slice()
-      this._runner._renderer.view.addEventListener('click', preloadStimuli)
-      this._runner._renderer.view.addEventListener('touchstart', preloadStimuli)
-    } else {
-      this._clearIntroScreen()
-      this._runner._initialize()
+      }.bind(this)
+      // We get the audio context and try to resume it if it is currently
+      // suspended. Once the audio context is running, we continue. If 
+      // resuming the context fails, we do nothing so that the user can
+      // click the screen again to try again.
+      this._audioContext = getAudioContext()
+      if (this._audioContext.state === 'suspended') {
+        this._audioContext.resume()
+          .then(() => {
+            console.log('audio context resumed')
+            withRunningAudioContext()
+          })
+          .catch(() => {
+            console.log('failed to resume audio context, click to try again')
+          })
+      } else {
+        console.log('no need to resume audio context')
+        withRunningAudioContext()
+      }
+    }.bind(this)
+    // Update inroscreen.
+    if ((typeof text === "undefined") || (text.length === 0)) {
+      text = `
+Never provide personal or sensitive information
+    such as credit card numbers or PIN codes
+
+           Click or touch the screen to begin!`
     }
+    this._updateIntroScreen(text)
+    this._preloadQueue = this._runner._experiment.pool._items.slice()
+    this._runner._renderer.view.addEventListener('click', preloadStimuli)
+    this._runner._renderer.view.addEventListener('touchstart', preloadStimuli)
   }
 
   /** Clear the introscreen elements. */
