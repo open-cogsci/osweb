@@ -605,24 +605,26 @@ export default class Canvas {
     this._textures.push(texture)
     const sprite = new Sprite(texture)
     sprite.roi = this.current_roi
-    // sprite.anchor.set(.5)
+    sprite.anchor.set(0.5)  // Set the anchor point to the center of the sprite.
     if (typeof scale !== 'undefined') {
       sprite.scale.x = scale
       sprite.scale.y = scale
     }
     if (typeof rotation !== 'undefined')
       sprite.angle = rotation
-    // Position the image
+    // Position the image when it is centered
     if ([1, '1', true, 'yes'].indexOf(center) !== -1) {
-      sprite.x = Math.floor(x - (sprite.width / 2))
-      sprite.y = Math.floor(y - (sprite.height / 2))
+      sprite.x = Math.floor(x)
+      sprite.y = Math.floor(y)
+    // And when it is not centered, i.e. anchored to the top-left
     } else {
-      sprite.x = x
-      sprite.y = y
+      sprite.x = Math.floor(x + sprite.width / 2)
+      sprite.y = Math.floor(y + sprite.height / 2)
     }
     console.log(sprite.x)
     this._container.addChild(sprite)
   }
+  
 
   /**
    * Initializes the  display container on which the canvas is displayed.
