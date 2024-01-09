@@ -113,7 +113,11 @@ export default class Screen {
     // straight away
     if (this._click === false) {
       this._clearIntroScreen()
-      this._runner._initialize()
+      // Use a timeout callback to push the function to the end of the queue
+      // so that the error handler has time to be set up
+      setTimeout(() => {
+        this._runner._initialize()
+      }, 0)
       return
     }
     // Otherwise we require the user to touch/ click the screen, in response
@@ -133,7 +137,11 @@ export default class Screen {
         this._runner._renderer.view.removeEventListener('click', preloadStimuli)
         this._runner._renderer.view.removeEventListener('touchstart', preloadStimuli)
         this._clearIntroScreen()
-        this._runner._initialize()
+        // Use a timeout callback to push the function to the end of the queue
+        // so that the error handler has time to be set up
+        setTimeout(() => {
+          this._runner._initialize()
+        }, 0)
       }.bind(this)
       // Once the audio context is running, this function silently and 
       // briefly plays all audio samples so that they can be played back
