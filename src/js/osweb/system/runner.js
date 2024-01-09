@@ -65,30 +65,26 @@ export default class Runner {
    * @param {String|Object} content - The content (div element) in which the experiment is projected.
    */
   _setupContent (content) {
-    // Check if the experiment container is defined.
-    if (typeof content !== 'undefined') {
-      // Get the div element from the DOM element tree
-      this._container = (typeof content === 'string') ? document.getElementById(content) : content
-
-      // Create and set the experiment canvas.
-      try {
-        this._renderer = autoDetectRenderer(800, 600, {
-          antialias: true,
-          transparent: false,
-          resolution: 1
-        })
-      } catch (error) {
-        document.getElementById('webgl-unavailable').style.display = 'block'
-        return
-      }
-      this._renderer.backgroundColor = 0xFFFFFF;
-
-      // Append the canvas to the container.
-      this._container.appendChild(this._renderer.view)
-    } else {
-      // Show error message.
+    if (typeof content === 'undefined') {
       this._debugger.addError('No content parameter specified.')
+      return
     }
+    // Get the div element from the DOM element tree
+    this._container = (typeof content === 'string') ? document.getElementById(content) : content
+    // Create and set the experiment canvas.
+    try {
+      this._renderer = autoDetectRenderer(800, 600, {
+        antialias: true,
+        transparent: false,
+        resolution: 1
+      })
+    } catch (error) {
+      document.getElementById('webgl-unavailable').style.display = 'block'
+      return
+    }
+    this._renderer.backgroundColor = 0xFFFFFF;
+    // Append the canvas to the container.
+    this._container.appendChild(this._renderer.view)
   }
 
   /**
@@ -96,57 +92,55 @@ export default class Runner {
    * @param {Object} context - An JSON object containing information about the experiment.
    */
   async _setupContext (context) {
-    // Check if the script parameter is defined.
-    if (typeof context !== 'undefined') {
-      // Initialize the context parameters.
-      // Use ES6 destructuring to determine values and set default ones if
-      // required.
-      ({
-        confirm: this._confirm = null,
-        debug: this._debugger.enabled = false,
-        fullScreen: this._fullScreen = false,
-        fullBackgroundColor: this._fullBackgroundColor = false,
-        introClick: this._screen._click = true,
-        introScreen: this._screen._active = true,
-        mimetype: this._mimetype = null,
-        name: this._name = 'noname.exp',
-        onConsole: this._onConsole = null,
-        onFinished: this._onFinished = null,
-        onLog: this._onLog = null,
-        onError: this._onError = null,
-        prompt: this._prompt = null,
-        scaleMode: this._scaleMode = 'noScale',
-        source: this._source = null,
-        subject: this._subject = null,
-        target: this._target = null,
-        welcomeText: this._welcomeText = null
-      } = context)
-
-      // Set up the introscreen.
-      this._screen._setupIntroScreen()
-      this._screen._updateIntroScreen('Loading experiment.')
-
-      // Load the script file, using the source parameter.
-      try {
-        this._script = await this._transfer._readSource(this._source)
-      } catch (e) {
-        this._debugger.addError(`Error reading osexp: ${e}`)
-        this._exit()
-        return
-      }
-
-      // Update the introscreen
-      this._screen._updateIntroScreen('Building experiment structure.')
-
-      // Continue the experiment build.
-      this._build()
-
-      // Initialize the parameters class and request user input.
-      this._parameters._initialize()
-    } else {
-      // Show error message.
+    if (typeof context === 'undefined') {
       this.debugger.addError('No context parameter specified.')
+      return
     }
+    // Initialize the context parameters.
+    // Use ES6 destructuring to determine values and set default ones if
+    // required.
+    ({
+      confirm: this._confirm = null,
+      debug: this._debugger.enabled = false,
+      fullScreen: this._fullScreen = false,
+      fullBackgroundColor: this._fullBackgroundColor = false,
+      introClick: this._screen._click = true,
+      introScreen: this._screen._active = true,
+      mimetype: this._mimetype = null,
+      name: this._name = 'noname.exp',
+      onConsole: this._onConsole = null,
+      onFinished: this._onFinished = null,
+      onLog: this._onLog = null,
+      onError: this._onError = null,
+      prompt: this._prompt = null,
+      scaleMode: this._scaleMode = 'noScale',
+      source: this._source = null,
+      subject: this._subject = null,
+      target: this._target = null,
+      welcomeText: this._welcomeText = null
+    } = context)
+
+    // Set up the introscreen.
+    this._screen._setupIntroScreen()
+    this._screen._updateIntroScreen('Loading experiment.')
+
+    // Load the script file, using the source parameter.
+    try {
+      this._script = await this._transfer._readSource(this._source)
+    } catch (e) {
+      this._debugger.addError(`Error reading osexp: ${e}`)
+      this._exit()
+      return
+    }
+
+    // Update the introscreen
+    this._screen._updateIntroScreen('Building experiment structure.')
+
+    // Continue the experiment build.
+    this._build()
+
+    // Initialize the parameters class and request user input.
+    this._parameters._initialize()
   }
 
   /** Build the experiment system. */
