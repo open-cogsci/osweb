@@ -621,7 +621,6 @@ export default class Canvas {
       sprite.x = Math.floor(x + sprite.width / 2)
       sprite.y = Math.floor(y + sprite.height / 2)
     }
-    console.log(sprite.x)
     this._container.addChild(sprite)
   }
   
