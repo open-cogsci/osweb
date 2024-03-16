@@ -75,18 +75,30 @@ export default class Sketchpad extends GenericResponse {
       this.canvas._styles.background_color = backgroundColor
     }
   }
+  
+  /** Allow derived classes to call the super.prepare() instead of the custom
+    * prepare below.
+    */
+  super_prepare() {
+    super.prepare()
+  }
 
   /** Implements the prepare phase of an item. */
   prepare () {
     this.canvas.clear()
-    for (let i = 0; i < this.elements.length; i++) {
-      if (this.elements[i].is_shown() === true) {
-        this.elements[i].draw()
-      }
-    }
-    super.prepare()
+    // The draw functions may return a promise or undefined. We collect all
+    // promises that are returned, and wait for all them to resolve before we
+    // call the super.prepare function. This allows for draw operations that
+    // take some time, for example the textline draw function that may need to
+    // load a webfont.
+    const promises = this.elements
+      .filter(element => element.is_shown() === true)
+      .map(element => { return element.draw() })
+      .filter(promise => promise !== undefined)
+    Promise.all(promises).then(() => {
+      super.prepare()
+    })
   }
-
   /** Implements the run phase of the Sketschpad. */
   run () {
     super.run()

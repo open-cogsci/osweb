@@ -46,8 +46,21 @@ export default class Feedback extends Sketchpad {
 
   /** Implements the run phase of an item. */
   run () {
-    // Inherited.
-    super.prepare()
-    super.run()
+    this.canvas.clear()
+    // The draw functions may return a promise or undefined. We collect all
+    // promises that are returned, and wait for all them to resolve before we
+    // call the super.prepare function. This allows for draw operations that
+    // take some time, for example the textline draw function that may need to
+    // load a webfont.
+    const promises = this.elements
+      .filter(element => element.is_shown() === true)
+      .map(element => { return element.draw() })
+      .filter(promise => promise !== undefined)
+    Promise.all(promises).then(() => {
+      // super.prepare() itself uses a promise and this provides access to the
+      // grandparent prepare()
+      super.super_prepare()
+      super.run()
+    })  
   }
 }

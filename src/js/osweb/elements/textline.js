@@ -1,5 +1,6 @@
 import BaseElement from './base_element.js'
 import Styles from '../backends/styles.js'
+import WebFont from 'webfontloader'
 
 /**
  * Class representing a textline element.
@@ -28,12 +29,18 @@ export default class Textline extends BaseElement {
     // Inherited.
     super(sketchpad, script, defaults)
   }
+  
+  drawText(styles) {
+    this.sketchpad.canvas.text(this._properties.text, this._properties.center,
+      this._properties.x, this._properties.y, this._properties.html,
+      styles)
+    this._isDrawn = true
+  }
 
   /** Implements the draw phase of an element. */
   draw () {
     // Inherited.
     super.draw()
-    const text = this._properties.text
     // Create a styles object containing style information
     const styles = new Styles()
     styles.color = this._properties.color
@@ -42,9 +49,53 @@ export default class Textline extends BaseElement {
     styles.font_italic = (this._properties.font_italic === 'yes')
     styles.font_bold = (this._properties.font_bold === 'yes')
     styles.font_underline = (this._properties.font_underline === 'yes')
-
-    this.sketchpad.canvas.text(text, this._properties.center,
-      this._properties.x, this._properties.y, this._properties.html,
-      styles)
+    this._isDrawn = false
+    // If the font family is not among the default fonts, we attempt to load it
+    // dynamically from Google Fonts. The resulting promise should always 
+    // resolve, regardless of whether this worked or not
+    if (Object.values(styles._DEFAULT_FONTS).indexOf(styles.font_family) < 0) {
+        const promise = new Promise((resolve, reject) => {
+          WebFont.load({
+            google: {
+              families: [styles.font_family]
+            },
+            // The active event is called when the font is succesfully loaded
+            active: () => {
+              console.log(`font loaded: ${styles.font_family}`)
+              this.drawText(styles)
+              resolve()
+            },
+            // The inactive event is called when the font couldn't be loaded
+            inactive: () => {
+              console.warn(`failed to load font: ${styles.font_family}`)
+              this.drawText(styles)
+              resolve()
+            }
+          })
+        })
+        // We create a separate timeout promise to make sure that the font 
+        // loader doesn't hang (because it tends to hand indefinitely). When
+        // a timeout occurs, we draw the text anyway. It's unclear why for
+        // some fonts the inactive event above isn't called, but this timeout
+        // deals with that.
+        const timeout = new Promise((resolve, reject) => {
+          setTimeout(() => {
+            if (!this._isDrawn) {
+                console.warn(`font loading timed out: ${styles.font_family}`)
+                this.drawText(styles)
+            }
+            resolve()
+          }, 3000)
+        })
+        // The promise resolves when either the font loader resolves or the
+        // timeout, whichever happens first
+        return Promise.race([promise, timeout])
+    }
+    // For the default fonts, we return a dummy promise that resolves right
+    // away
+    return new Promise((resolve) => {
+      this.drawText(styles)
+      resolve()
+    })
   }
 }
