@@ -2,6 +2,8 @@ import BaseElement from './base_element.js'
 import Styles from '../backends/styles.js'
 import WebFont from 'webfontloader'
 
+const loadedFonts = []
+
 /**
  * Class representing a textline element.
  * @extends BaseElement
@@ -53,7 +55,8 @@ export default class Textline extends BaseElement {
     // If the font family is not among the default fonts, we attempt to load it
     // dynamically from Google Fonts. The resulting promise should always 
     // resolve, regardless of whether this worked or not
-    if (Object.values(styles._DEFAULT_FONTS).indexOf(styles.font_family) < 0) {
+    if (!loadedFonts.includes(styles.font_family) && Object.values(styles._DEFAULT_FONTS).indexOf(styles.font_family) < 0) {
+        loadedFonts.push(styles.font_family)
         const promise = new Promise((resolve, reject) => {
           WebFont.load({
             google: {
