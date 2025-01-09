@@ -86,24 +86,27 @@ export default class Sketchpad extends GenericResponse {
     super.prepare()
   }
 
-  /** Implements the prepare phase of an item. */
-  prepare () {
-    // Sort the elements usin the z-index.
+  prepare() {
+    // Sort the elements based on the z-index
     this.elements.sort(this._compare)
     this.canvas.clear()
-    // The draw functions may return a promise or undefined. We collect all
-    // promises that are returned, and wait for all them to resolve before we
-    // call the super.prepare function. This allows for draw operations that
-    // take some time, for example the textline draw function that may need to
-    // load a webfont.
-    const promises = this.elements
-      .filter(element => element.is_shown() === true)
-      .map(element => { return element.draw() })
-      .filter(promise => promise !== undefined)
-    Promise.all(promises).then(() => {
+    // Filter elements that are shown
+    const visibleElements = this.elements.filter(element => element.is_shown() === true)
+    // Chain promises for sequential execution. This ensures that each element
+    // is drawn before the next element to avoid race conditions. Otherwise,
+    // font loading may fail when multiple textline elements are shown.
+    const sequentialDraw = visibleElements.reduce((chain, element) => {
+      return chain.then(() => {
+        const drawPromise = element.draw()
+        return drawPromise !== undefined ? drawPromise : Promise.resolve()
+      })
+    }, Promise.resolve())
+    // After all elements are drawn, call super.prepare()
+    sequentialDraw.then(() => {
       super.prepare()
     })
-  }
+  }  
+  
   /** Implements the run phase of the Sketschpad. */
   run () {
     super.run()
