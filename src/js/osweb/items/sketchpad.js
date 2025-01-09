@@ -20,8 +20,13 @@ export default class Sketchpad extends GenericResponse {
     * @return {Number} - The result of the comparison.
     */
   _compare (a, b) {
-    // Sort function used for determining the draw index (z-index) of alle elemente.
-    if (a.z_index() < b.z_index()) { return 1 } else if (a.z_index() > b.z_index()) { return -1 } else { return 0 }
+    if (a.z_index() < b.z_index()) {
+      return 1
+    }
+    if (a.z_index() > b.z_index()) {
+      return -1
+    }
+    return 0
   }
 
   /** Resets all item variables to their default value. */
@@ -60,8 +65,6 @@ export default class Sketchpad extends GenericResponse {
         }
       }
     }
-    // Sort the elements usin the z-index.
-    this.elements.sort(this._compare)
   }
 
   /**
@@ -85,6 +88,8 @@ export default class Sketchpad extends GenericResponse {
 
   /** Implements the prepare phase of an item. */
   prepare () {
+    // Sort the elements usin the z-index.
+    this.elements.sort(this._compare)
     this.canvas.clear()
     // The draw functions may return a promise or undefined. We collect all
     // promises that are returned, and wait for all them to resolve before we

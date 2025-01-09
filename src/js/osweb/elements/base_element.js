@@ -1,7 +1,7 @@
 /** Class representing a general visual element. */
 export default class BaseElement {
   /**
-   * Create a log object which stores all the response data.
+   * Create a sketchpad element.
    * @param {Object} sketchpad - The sketchpad item that owns the visual element.
    * @param {String} script - The script containing properties of the visual element.
    * @param {Object} defaults - The default property values of the visual element.
@@ -50,7 +50,7 @@ export default class BaseElement {
    * @memberof BaseElement
    */
   z_index () {
-    return this.properties.z_index
+    return this.syntax.eval_text(this.properties.z_index, this.vars, false)
   }
 
   /**
