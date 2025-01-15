@@ -359,15 +359,13 @@ export default class Canvas {
    * @param {Object} style_args - JSON object containing style arguments (optional).
    */
   clear (backgroundColor, styleArgs) {
-    // Clear the stage by temoving al the child elements.
-    for (var i = this._container.children.length - 1; i >= 0; i--) {
-      this._container.removeChild(this._container.children[i])
-    }
-    let texture
-    while (this._textures.length > 0) {
-      texture = this._textures.pop()
-      texture.destroy(true)
-    }
+    this._container.destroy({
+      children: true,
+      texture: true,
+      baseTexture: true
+    })
+    this._container = new Container()
+    this._textures = []
   }
 
   /**
