@@ -119,18 +119,19 @@ export default class Canvas {
   _getTextBaseline (textLine, fontFamily, fontSize, fontBold) {
     // Create the text element.
     const text = document.createElement('span')
+    text.style.whiteSpace = 'nowrap'
     text.style.fontFamily = fontFamily || 'Arial'
     text.style.fontWeight = (fontBold === true) ? 'bold' : 'normal'
     text.style.fontSize = String(fontSize) + 'px'
     text.innerHTML = textLine
     // Create the calculation div.
     const block = document.createElement('div')
+    block.style.whiteSpace = 'nowrap'
     block.style.display = 'inline-block'
     block.style.lineHeight = 'normal'
-    // block.style.width = '1px'
-    // block.style.height = '0px'
     // Create the container div.
     const div = document.createElement('div')
+    div.style.whiteSpace = 'nowrap'
     div.append(text, block)
     document.body.appendChild(div)
 
@@ -158,8 +159,7 @@ export default class Canvas {
     result.descent = result.height - result.ascent
 
     document.body.removeChild(div)
-
-    // Return the result.
+    // Return the result
     return result
   }
 
@@ -272,7 +272,6 @@ export default class Canvas {
 
       // Get the height and descent (for vertical positioning);
       var dimension = this._getTextBaseline(htmlNode.textContent, elementStyle.font_family, elementStyle.font_size, elementStyle.font_bold)
-
       // Position the text element and update the width.
       textElement.x = textBlock.x_pos
       textElement.y = textBlock.y_pos
@@ -909,6 +908,7 @@ export default class Canvas {
       // First create a div container for parsing the html text.
       const div = document.createElement('div')
       document.body.appendChild(div)
+      div.style.whiteSpace = 'nowrap'
       div.style.fontFamily = elementStyle.font_family
       div.style.fontSize = String(elementStyle.font_size) + 'px'
       div.style.fontWeight = (elementStyle.font_bold === true) ? 'bold' : 'normal'
