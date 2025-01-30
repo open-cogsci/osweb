@@ -119,56 +119,11 @@ export default class Transfer {
           return
       }
       console.log(`file pool embedded in HTML (${filePool.children.length} files)`)
-      const audioContext = getAudioContext()
-      let audioPromises = []
+      // First we process the images, videos, and text, which do not require
+      // promises
       for (const asset of filePool.children) {
           if (asset instanceof HTMLImageElement) {
               this._runner._pool.add({ data: asset, type: 'image' }, asset.id)
-          } else if (asset instanceof HTMLAudioElement 
-                     || (asset instanceof HTMLSpanElement && asset.className === 'audioFile')) {
-            // Audio can be embedded either as the text content of a `<span>`
-            // element or the source of an `<audio><source></src>` element.
-            // By default, spans are used because too many audio elements 
-            // breaks on iOS. In all cases, audio is read into a buffer for
-            // later playback through the WebAudio API.
-            let audioSrc = asset instanceof HTMLAudioElement ? asset.querySelector('source').src : asset.textContent;
-            let promise = new Promise((resolve, reject) => {
-                if (audioSrc.startsWith('data:')) {
-                    // Handle Base64 encoded data
-                    const base64String = audioSrc.split(',')[1];
-                    const audioData = atob(base64String);
-                    const audioArray = new Uint8Array(audioData.length);
-                    for (let i = 0; i < audioData.length; i++) {
-                        audioArray[i] = audioData.charCodeAt(i);
-                    }
-                    const audioBuffer = new ArrayBuffer(audioArray.length);
-                    const bufferView = new Uint8Array(audioBuffer);
-                    bufferView.set(audioArray);
-                    audioContext.decodeAudioData(audioBuffer, function (buffer) {
-                        this._runner._pool.add({ data: buffer, type: 'audioBuffer' }, asset.id)
-                        resolve();
-                    }.bind(this), function (error) {
-                        console.error('Error decoding audio:', error);
-                        reject(error);
-                    });
-                } else {
-                    // Handle audio file from a URI
-                    let request = new XMLHttpRequest();
-                    request.open('GET', audioSrc, true);
-                    request.responseType = 'arraybuffer';
-                    request.onload = function () {
-                        audioContext.decodeAudioData(request.response, function (buffer) {
-                            this._runner._pool.add({ data: buffer, type: 'audioBuffer' }, asset.id)
-                            resolve();
-                        }.bind(this), function (error) {
-                            console.error('Error decoding audio:', error);
-                            reject(error);
-                        });
-                    }.bind(this);
-                    request.send();
-                }
-            });
-            audioPromises.push(promise);
           } else if (asset instanceof HTMLVideoElement) {
               this._runner._pool.add({ data: asset, type: 'video' }, asset.id)
           } else if (asset instanceof HTMLPreElement) {
@@ -177,11 +132,71 @@ export default class Transfer {
               console.log(`unknown pool element: ${asset}`)
               continue
           }
-  
-          
       }
-      await Promise.all(audioPromises)
-      console.log("all audio files have been loaded and decoded")
+      // And now the audio files
+      const BATCH_SIZE = 50;
+      const audioContext = getAudioContext()
+      // Filter children to include only HTMLAudioElements or <span class="audioFile">
+      const filteredChildren = [...filePool.children].filter(asset =>
+        asset instanceof HTMLAudioElement ||
+        (asset instanceof HTMLSpanElement && asset.className === 'audioFile')
+      );
+      
+      for (let i = 0; i < filteredChildren.length; i += BATCH_SIZE) {
+        // Take a slice of the array
+        const batch = filteredChildren.slice(i, i + BATCH_SIZE);
+        // Build promises for just the current batch
+        const batchPromises = batch.map(asset => {
+          let audioSrc;
+          if (asset instanceof HTMLAudioElement) {
+            audioSrc = asset.querySelector('source').src;
+          } else {
+            // Assumes textContent points to the file for <span class="audioFile">
+            audioSrc = asset.textContent;
+          }
+          return new Promise((resolve, reject) => {
+            if (audioSrc.startsWith('data:')) {
+                // Handle Base64 encoded data
+                const base64String = audioSrc.split(',')[1];
+                const audioData = atob(base64String);
+                const audioArray = new Uint8Array(audioData.length);
+                for (let i = 0; i < audioData.length; i++) {
+                    audioArray[i] = audioData.charCodeAt(i);
+                }
+                const audioBuffer = new ArrayBuffer(audioArray.length);
+                const bufferView = new Uint8Array(audioBuffer);
+                bufferView.set(audioArray);
+                audioContext.decodeAudioData(audioBuffer, function (buffer) {
+                    this._runner._pool.add({ data: buffer, type: 'audioBuffer' }, asset.id)
+                    resolve();
+                }.bind(this), function (error) {
+                    console.error('Error decoding audio:', error);
+                    reject(error);
+                });
+            } else {
+                // Handle audio file from a URI
+                let request = new XMLHttpRequest();
+                request.open('GET', audioSrc, true);
+                request.responseType = 'arraybuffer';
+                request.onload = function () {
+                    audioContext.decodeAudioData(request.response, function (buffer) {
+                        this._runner._pool.add({ data: buffer, type: 'audioBuffer' }, asset.id)
+                        resolve();
+                    }.bind(this), function (error) {
+                        console.error('Error decoding audio:', error);
+                        reject(error);
+                    });
+                }.bind(this);
+                request.send();
+            }
+          });
+        });
+      
+        // Wait for the entire batch to finish before proceeding
+        await Promise.all(batchPromises);
+        console.log("Audio batch loaded: ", i / BATCH_SIZE + 1);
+      }
+      console.log("All audio files have been loaded and decoded");    
   }
   
 
