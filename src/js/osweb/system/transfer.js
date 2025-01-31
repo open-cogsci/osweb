@@ -133,9 +133,89 @@ export default class Transfer {
               continue
           }
       }
-      // And now the audio files
-      const BATCH_SIZE = 50;
-      const audioContext = getAudioContext()
+
+      // Example snippet with retry logic (fixed 'this' context)
+      const BATCH_SIZE = 10;
+      const audioContext = getAudioContext();
+      
+      // Helper function that retries an audio fetch on network errors
+      function loadAudioDataWithRetry(audioContext, audioSrc, assetId, attempt = 1, maxAttempts = 3, delay = 5000) {
+        // Capture "this"
+        const self = this;
+      
+        return new Promise((resolve, reject) => {
+          // Handle Base64 encoded data
+          if (audioSrc.startsWith('data:')) {
+            try {
+              const base64String = audioSrc.split(',')[1];
+              const audioData = atob(base64String);
+              const audioArray = new Uint8Array(audioData.length);
+              for (let i = 0; i < audioData.length; i++) {
+                audioArray[i] = audioData.charCodeAt(i);
+              }
+              const audioBuffer = new ArrayBuffer(audioArray.length);
+              const bufferView = new Uint8Array(audioBuffer);
+              bufferView.set(audioArray);
+      
+              audioContext.decodeAudioData(audioBuffer, function (buffer) {
+                self._runner._pool.add({ data: buffer, type: 'audioBuffer' }, assetId);
+                resolve();
+              }, function (error) {
+                console.error('Error decoding audio:', error);
+                reject(error);
+              });
+            } catch (error) {
+              console.error('Error processing Base64 audio:', error);
+              reject(error);
+            }
+          } else {
+            // Standard URI request
+            const request = new XMLHttpRequest();
+            request.open('GET', audioSrc, true);
+            request.responseType = 'arraybuffer';
+      
+            request.onload = function () {
+              // Check for HTTP success (200-299)
+              if (request.status >= 200 && request.status < 300) {
+                audioContext.decodeAudioData(request.response, function (buffer) {
+                  self._runner._pool.add({ data: buffer, type: 'audioBuffer' }, assetId);
+                  resolve();
+                }, function (decodeError) {
+                  console.error('Error decoding audio:', decodeError);
+                  reject(decodeError);
+                });
+              } else {
+                if (attempt < maxAttempts) {
+                  console.warn(`Audio request failed for ${audioSrc} (status: ${request.status}). Retrying in ${delay}ms...`);
+                  setTimeout(() => {
+                    loadAudioDataWithRetry.call(self, audioContext, audioSrc, assetId, attempt + 1, maxAttempts, delay)
+                      .then(resolve)
+                      .catch(reject);
+                  }, delay);
+                } else {
+                  reject(new Error(`Max retries reached. Request for ${audioSrc} failed with status: ${request.status}.`));
+                }
+              }
+            };
+      
+            request.onerror = function () {
+              if (attempt < maxAttempts) {
+                console.warn(`Network error on audio request for ${audioSrc}. Retrying in ${delay}ms...`);
+                setTimeout(() => {
+                  loadAudioDataWithRetry.call(self, audioContext, audioSrc, assetId, attempt + 1, maxAttempts, delay)
+                    .then(resolve)
+                    .catch(reject);
+                }, delay);
+              } else {
+                reject(new Error(`Max retries reached. Network error fetching ${audioSrc}.`));
+              }
+            };
+      
+            request.send();
+          }
+        });
+      }
+      
       // Filter children to include only HTMLAudioElements or <span class="audioFile">
       const filteredChildren = [...filePool.children].filter(asset =>
         asset instanceof HTMLAudioElement ||
@@ -145,6 +225,7 @@ export default class Transfer {
       for (let i = 0; i < filteredChildren.length; i += BATCH_SIZE) {
         // Take a slice of the array
         const batch = filteredChildren.slice(i, i + BATCH_SIZE);
+        console.log(`Fetching audio files ${i} - ${i + BATCH_SIZE}`);
         // Build promises for just the current batch
         const batchPromises = batch.map(asset => {
           let audioSrc;
@@ -154,48 +235,14 @@ export default class Transfer {
             // Assumes textContent points to the file for <span class="audioFile">
             audioSrc = asset.textContent;
           }
-          return new Promise((resolve, reject) => {
-            if (audioSrc.startsWith('data:')) {
-                // Handle Base64 encoded data
-                const base64String = audioSrc.split(',')[1];
-                const audioData = atob(base64String);
-                const audioArray = new Uint8Array(audioData.length);
-                for (let i = 0; i < audioData.length; i++) {
-                    audioArray[i] = audioData.charCodeAt(i);
-                }
-                const audioBuffer = new ArrayBuffer(audioArray.length);
-                const bufferView = new Uint8Array(audioBuffer);
-                bufferView.set(audioArray);
-                audioContext.decodeAudioData(audioBuffer, function (buffer) {
-                    this._runner._pool.add({ data: buffer, type: 'audioBuffer' }, asset.id)
-                    resolve();
-                }.bind(this), function (error) {
-                    console.error('Error decoding audio:', error);
-                    reject(error);
-                });
-            } else {
-                // Handle audio file from a URI
-                let request = new XMLHttpRequest();
-                request.open('GET', audioSrc, true);
-                request.responseType = 'arraybuffer';
-                request.onload = function () {
-                    audioContext.decodeAudioData(request.response, function (buffer) {
-                        this._runner._pool.add({ data: buffer, type: 'audioBuffer' }, asset.id)
-                        resolve();
-                    }.bind(this), function (error) {
-                        console.error('Error decoding audio:', error);
-                        reject(error);
-                    });
-                }.bind(this);
-                request.send();
-            }
-          });
+          // Use the retry function
+          return loadAudioDataWithRetry.call(this, audioContext, audioSrc, asset.id);
         });
       
-        // Wait for the entire batch to finish before proceeding
+        // Await them all before moving on to the next batch
         await Promise.all(batchPromises);
-        console.log("Audio batch loaded: ", i / BATCH_SIZE + 1);
       }
+
       console.log("All audio files have been loaded and decoded");    
   }
   
