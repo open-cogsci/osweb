@@ -146,14 +146,15 @@ export default class GenericResponse extends Item {
 
   /** Prepare the system for a timeout. */
   prepare_timeout () {
-    let timeout = this.vars.get('timeout', true, -1)
+    debugger;
+    let timeout = this.syntax.convert_if_numeric(this.vars.get('timeout', true, -1))
     this._timeout = (typeof timeout === 'number' && timeout !== -1) ? timeout : null
   }
   
   /** Sets duration and allowed responses on the response object. **/
   configure_response_objects() {
     // We get duration again, because this._duration can be set to -1
-    const duration = this.vars.get('duration', true, -1)
+    const duration = this.syntax.convert_if_numeric(this.vars.get('duration', true, -1))
     if (duration === 'keypress') {
       this._keyboard._set_config(this._final_duration, this._allowed_responses)
     } else if (duration === 'mouseclick') {
