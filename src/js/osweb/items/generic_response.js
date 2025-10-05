@@ -146,7 +146,6 @@ export default class GenericResponse extends Item {
 
   /** Prepare the system for a timeout. */
   prepare_timeout () {
-    debugger;
     let timeout = this.syntax.convert_if_numeric(this.vars.get('timeout', true, -1))
     this._timeout = (typeof timeout === 'number' && timeout !== -1) ? timeout : null
   }
